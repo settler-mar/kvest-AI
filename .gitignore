@@ -69,3 +69,5 @@ __pycache__
 .clang_complete
 .gcc-flags.json
 /lib/
+arduino_ide
+

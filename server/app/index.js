@@ -1,0 +1,26 @@
+//@ts-check
+const express = require("express");
+const http = require('http');
+const requestIp = require('request-ip');
+
+const config = require("./modules/config");
+const Router = require("./modules/router");
+const Style = require("./modules/style");
+const wss = require("./modules/wss");
+const game = require("./modules/game");
+
+let app = express();
+let web = http.createServer(app);
+
+Style.init(app, config);
+app.use(requestIp.mw())
+Router.init(app, config);
+wss.init(web, config);
+
+game(config);
+
+const port = config.port || 8080;
+web.listen(port, (err) => {
+    console.log(`Worker ${process.pid} running a ${config.env} server. Запущен веб интерфейс по адресу http://localhost:${port}`)
+});
+
