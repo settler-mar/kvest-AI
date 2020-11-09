@@ -1,4 +1,3 @@
-#include <DFRobotDFPlayerMini.h>
 #include <SoftwareSerial.h>
 
 /*
@@ -39,6 +38,9 @@
   1. play only one track 0001.mp3 and stop after motor stop
   2. different time for each motor
   3. short open Door1 after start
+
+  v05
+  Звук отключен
 */
 
 
@@ -70,16 +72,12 @@
 
 #define TEST_TIME 1000  // time ms LED ON on startup
 #define NOISE_DELAY 25  // debounce delay
+#define DEFAULT_ON_TIME 7000  // time while default is ON
 #define MOTOR1_ON_TIME 4000  // time while motor is ON
 #define MOTOR2_ON_TIME 8500  // time while motor is ON
 #define MOTOR3_ON_TIME 8000  // time while motor is ON
 #define MOTOR4_ON_TIME 2000  // short open Door1 after start
 
-
-// -------------------     DFplayer setup   -------------------------
-
-DFRobotDFPlayerMini myDFPlayer;
-SoftwareSerial playerSerial(MP3_RX, MP3_TX); // RX, TX
 
 // Central Plate serial
 SoftwareSerial cpSerial(CP_RX, CP_TX); // RX, TX
@@ -141,25 +139,6 @@ void IOinitialState(){
     digitalWrite(SND3, HIGH);
 }
 
-// DF_Player init
-void init_Player(){
-    playerSerial.begin(9600);
-    delay(10); // added in last version to disable uninitialized Player
-    Serial.println();
-    Serial.println(F("Initializing DFPlayer ... (May take 3~5 seconds)"));
-    // if not initialized - check power & signal cables
-    if (!myDFPlayer.begin(playerSerial)) {
-      Serial.println(F("Unable to begin:"));
-      Serial.println(F("1.Please recheck the connection!"));
-      Serial.println(F("2.Please insert the SD card!"));
-      while(true){
-        flash();
-      };
-    }
-    Serial.println(F("DFPlayer Mini online."));
-    myDFPlayer.volume(25);  //Set volume value. From 0 to 30
-}
-
 // blink LED
 // ++
 void flash()
@@ -190,22 +169,9 @@ void startTest(){
 }
 
 void  checkInput(){
-    btn1State = false;  
-    gk2State = false;
-    gk3State = false;
-    if(pinPushed(BTN1)){
-        btn1State = true;
-        return;
-    }
-    if(pinPushed(GK2)){
-        gk2State = true;
-        return;
-    }
-    if(pinPushed(GK3)){
-        gk3State = true;
-        return;
-    }
-    
+    btn1State = pinPushed(BTN1);  
+    gk2State = pinPushed(GK2);
+    gk3State = pinPushed(GK3);    
 }
   
 void  checkSerial(){
@@ -273,77 +239,12 @@ void playSnd() {
           digitalWrite(SND3, LOW);
       }
     }
-    playTrack(1); // play move SND
-}
-
-void printDetail(uint8_t type, int value){
-  switch (type) {
-    case TimeOut:
-      Serial.println(F("Time Out!"));
-      break;
-    case WrongStack:
-      Serial.println(F("Stack Wrong!"));
-      break;
-    case DFPlayerCardInserted:
-      Serial.println(F("Card Inserted!"));
-      break;
-    case DFPlayerCardRemoved:
-      Serial.println(F("Card Removed!"));
-      break;
-    case DFPlayerCardOnline:
-      Serial.println(F("Card Online!"));
-      break;
-    case DFPlayerPlayFinished:
-      Serial.print(F("Number:"));
-      Serial.print(value);
-      Serial.println(F(" Play Finished!"));
-      break;
-    case DFPlayerError:
-      Serial.print(F("DFPlayerError:"));
-      switch (value) {
-        case Busy:
-          Serial.println(F("Card not found"));
-          break;
-        case Sleeping:
-          Serial.println(F("Sleeping"));
-          break;
-        case SerialWrongStack:
-          Serial.println(F("Get Wrong Stack"));
-          break;
-        case CheckSumNotMatch:
-          Serial.println(F("Check Sum Not Match"));
-          break;
-        case FileIndexOut:
-          Serial.println(F("File Index Out of Bound"));
-          break;
-        case FileMismatch:
-          Serial.println(F("Cannot Find File"));
-          break;
-        case Advertise:
-          Serial.println(F("In Advertise"));
-          break;
-        default:
-          break;
-      }
-      break;
-    default:
-      break;
-  }
-
-}
-
-void playTrack(int num) {
-    playerSerial.listen();
-    myDFPlayer.play(num); // play first track
-//   myDFPlayer.playMp3Folder(1);  //Play the NUM mp3
-   //play specific mp3 in SD:/MP3/0004.mp3; File Name(0~65535)
 }
 
 void moveMotor(byte motor, byte i){
-      playSnd();
       timer = millis();
       digitalWrite(motor, LOW);
-      unsigned long int MOTOR_ON_TIME = 7000;
+      unsigned long int MOTOR_ON_TIME = DEFAULT_ON_TIME;
       if (i == 1) MOTOR_ON_TIME = MOTOR1_ON_TIME;
       else if (i == 2) MOTOR_ON_TIME = MOTOR2_ON_TIME;
       else if (i == 3) MOTOR_ON_TIME = MOTOR3_ON_TIME;
@@ -352,8 +253,6 @@ void moveMotor(byte motor, byte i){
           checkInput();
           enlightLED();
       }
-      myDFPlayer.stop();
-//      playTrack(4); // play stop SND
       digitalWrite(motor, HIGH);
       timer = 0;
 }
@@ -404,10 +303,7 @@ void setup() {
     
     cpSerial.setTimeout(100); // set wait timeout for string receive
     cpSerial.begin(9600);
-    
-    init_Player();
-    
-    
+      
     startTest();
     moveMotor(M1_BW, 4); // open door1
 }
@@ -419,10 +315,4 @@ void loop() {
   checkSerial();
   enlightLED();
   startMotors();
-  
-  // when you want to listen on a port, explicitly select it
-//  playerSerial.listen();
-//  if (myDFPlayer.available()) {
-//    printDetail(myDFPlayer.readType(), myDFPlayer.read()); //Print the detail message from DFPlayer to handle different errors and states.
-//  }
 }

@@ -19,7 +19,7 @@
         <thead>
           <tr>
             <th>CODE</th>
-            <th>API</th>
+            <th>IP</th>
             <th>STATUS</th>
           </tr>
         </thead>
@@ -29,30 +29,36 @@
           <td>{{item.online?'+':'-'}}</td>
         </tr>
       </table>
-
       <table>
         <thead>
         <tr>
-          <th>Дата</th>
-          <th>Время</th>
-          <th>Метод</th>
-          <th># машины(спереди)</th>
-          <th># машины(сзади)</th>
-          <th>вес</th>
+          <th>Этап</th>
+          <th>Параметр</th>
+          <th>Состояние</th>
+          <th>Действие</th>
         </tr>
         </thead>
-        <tbody v-if="loading">
-        <tr>
-          <td colspan="6">
-            Обновление данных...
-          </td>
-        </tr>
-        </tbody>
-        <tbody v-else>
-        <tr v-if="noRecord">
-          <td colspan="6">Записей не найдено((</td>
-        </tr>
-        <table-line v-for="item in items" :item="item"></table-line>
+        <tbody>
+          <template v-for="(item,i) in game_list">
+            <tr>
+              <td :rowspan="Object.keys(item.status).length + 1">{{item.name}}</td>
+              <td colspan="2"></td>
+              <td :rowspan="Object.keys(item.status).length + 1">
+                <div v-for="(title, com) in item.commands">
+                  <button v-on:click="evCommand(item.code,com)">{{title}}</button>
+                </div>
+              </td>
+            </tr>
+            <tr v-for="(st,code) in item.status">
+              <td>{{st.title}}</td>
+              <td>
+                <el_list v-if="st.type=='list'" :params="st" :data="get_status(item.code,code)"/>
+                <el_progress v-else-if="st.type=='progress'" :params="st" :data="get_status(item.code,code)"/>
+                <el_status v-else-if="st.type=='status'" :params="st" :data="get_status(item.code,code)"/>
+
+              </td>
+            </tr>
+          </template>
         </tbody>
       </table>
     </section>
@@ -63,7 +69,9 @@
 </template>
 
 <script>
-  import TableLine from './components/TableLine.vue'
+  import el_list from './components/el_list.vue'
+  import el_progress from './components/el_progress.vue'
+  import el_status from './components/el_status.vue'
 
   export default {
     data: function () {
@@ -80,26 +88,31 @@
       }
     },
     components: {
-      TableLine
+      el_list, el_progress,el_status
     },
     methods: {
-      get(list,key,name){
-        if(!(key in list)) return ""
-        if(!(name in list[key])) return ""
-        return list[key][name]
-      },
       evStart(e){
-        ws.send('Start')
+        ws.send('start')
       },
       evReset(e){
-        ws.send('Reset')
+        ws.send('reset')
       },
       evStop(e){
-        ws.send('Stop')
+        ws.send('stop')
       },
       evPause(e){
-        ws.send('Pause')
+        ws.send('pause')
       },
+      evCommand(name,command){
+        console.log([name,command].join(':'))
+        ws.send([name,command].join(':'))
+      },
+      get_status(el, code){
+        if(this.status[el] && this.status[el][code]){
+          return this.status[el][code]
+        }
+        return NaN
+      }
     },
     mounted() {
       //fetch('data')
@@ -117,43 +130,6 @@
           })
         }
         return out
-      },
-      totalItem() {
-        if (!this.db[this.year]) return '-';
-        if (!this.db[this.year][this.month]) return '-';
-        return this.db[this.year][this.month].length;
-      },
-      items() {
-        this.loading = true
-        var vue = this;
-        if (!this.year) return [];
-        if (!this.db[this.year]) {
-          this.db[this.year] = {};
-        }
-        if (!this.db[this.year][this.month]) {
-          if (typeof (getDataDb) == 'function') {
-            const url = '/get/' + this.year + '/' + this.month;
-            var b = getDataDb(url)
-          }
-          return []
-        }
-        let data = getList()
-        this.loading = false
-        return data;
-      },
-      years() {
-        const year = new Date().getFullYear() + 1
-        return Array.from({length: year - 2019}, (value, index) => 2019 + index)
-      },
-      noRecord() {
-        if (!this.db[this.year]) return true;
-        if (!this.db[this.year][this.month]) return true;
-        return this.db[this.year][this.month].length == 0;
-      },
-      maxPage() {
-        if (!this.db[this.year]) return 0;
-        if (!this.db[this.year][this.month]) return 0;
-        return Math.ceil(this.db[this.year][this.month].length / this.showCount)
       }
     },
   }

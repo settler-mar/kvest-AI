@@ -1,6 +1,26 @@
 #include "FastLED.h"
 #include <IRremote.h>
 
+
+/**
+ * Команды управления
+ * - reset - сброс в стартовое состояние
+ * - name - вернет имя
+ * - finish - перевести в конечное состояние 
+ * 
+ * Сообщения состояния
+ * - start - завпуск контроллера
+ * - init - окончание инициализациии
+ * - start - переведен в начальноес состояние
+ * - error:N - состяние питания/флешки 
+ * - progress:N - процесс наполнения шприца
+ * - finish - задача окончена
+ * 
+ * */
+
+#define NAME "injectorBox"
+String inData;
+
 IRsend IrSender; //on 3 pin
 #define UP_PIN 10 // реле для подъема шприца
 #define DOWN_PIN 11 // реле для спуска шприца
@@ -30,6 +50,7 @@ IRsend IrSender; //on 3 pin
 struct CRGB leds[WS_COUNT];
 byte ERR_st = 0;
 
+byte ERR_last = 0;
 /*
  * Алгоритм
  * 1) при старте запускается диагностика (шприц до упора вверх, потом вниз, контроль индикации)
@@ -51,9 +72,9 @@ byte inj_progress = 0; // блоков в шприце
 
 void test_cc(){
   byte CCState = digitalRead(CC_PIN);
-  Serial.println(CCState);
+  //Serial.println(CCState);
   if(CCState==HIGH){
-    Serial.println("CC");
+    //Serial.println("CC");
    if(mode==1){
       digitalWrite(UP_PIN, HIGH);
       digitalWrite(DOWN_PIN, LOW);
@@ -68,9 +89,16 @@ void test_cc(){
   }
 }
 
+void send_ir(){
+  unsigned long tData = 0xa90+inj_progress;
+  IrSender.sendSony(tData, 12);
+}
+
 //завершение алгоритма
 void finish(){
-  Serial.println("Finish");
+  Serial.println("finish");
+  inj_progress = INJECTOR_COUNT;
+  send_ir();send_ir();send_ir();
   delay(PAUSE_BEFORE_FINISH);
   digitalWrite(UP_PIN, LOW);
   digitalWrite(DOWN_PIN, HIGH);
@@ -106,6 +134,8 @@ void WS_GO(){
     if(blk_progress>=WS_BLK_COUNT){ // проверем достаточно ли залили для 1-го блока шприца
       blk_progress-=WS_BLK_COUNT;
       inj_progress++;
+      Serial.print("progress:");
+      Serial.println(inj_progress);
       if(inj_progress>=INJECTOR_COUNT){ //Проверяем полный ли шприц
         if(mode==0){
           finish();
@@ -125,7 +155,13 @@ void WS_GO(){
   }
 }
 
-void test_indictor(byte val){
+void test_indictor(byte val, byte err_code){
+  if(ERR_last != err_code){
+    ERR_last = err_code;
+    Serial.print("error:");
+    Serial.println(err_code);
+  }
+
   if(val==0){
     digitalWrite(LED1_PIN, LOW);
     digitalWrite(LED2_PIN, LOW);
@@ -160,26 +196,23 @@ boolean test_control(){ // Проверка условий работы; true е
     powerValue = analogRead(PIN_POWER_TEST);
     power_state = (powerValue>45);
   }
-  Serial.println(powerValue);
+  //Serial.println(powerValue);
 
   if(Key_State==power_state){ // Если статусы одинаковык то ввозвращаем их
-    test_indictor(0);
+    test_indictor(0, Key_State?0:3);
+    
     return Key_State;
   }
 
   if(Key_State){
-    test_indictor(1);
+    test_indictor(1, 1);
   }else{
-    test_indictor(2);
+    test_indictor(2, 2);
   }
 
   return false;// если статусы разные то возвращаем false
 }
 
-void send_ir(){
-  unsigned long tData = 0xa90+inj_progress;
-  IrSender.sendSony(tData, 12);
-}
 void demo(){ // Режим диагностики
   test_cc();
   WS_GO();
@@ -207,8 +240,23 @@ void start_state(){ // Установить начатьное состояни�
   LEDS.show();
 }
 
+void reset(){
+  digitalWrite(UP_PIN, LOW);
+  mode=1;
+  //Serial.println("Start DEMO");
+  while (mode){
+    demo();
+    delay(STEP_DELAY);
+  }
+  start_state();
+  Serial.println("start");
+}
+
+
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
+
+  Serial.println("load");
 
   pinMode(UP_PIN, OUTPUT);
   pinMode(DOWN_PIN, OUTPUT);
@@ -228,22 +276,39 @@ void setup() {
   while (!Serial)
   delay(500);
 
-  Serial.print(F("Ready to send IR signals at pin "));
-  Serial.println(IR_SEND_PIN);
+  //Serial.print(F("Ready to send IR signals at pin "));
+  //Serial.println(IR_SEND_PIN);
 
-  digitalWrite(UP_PIN, LOW);
-  mode=1;
-  Serial.println("Start DEMO");
-  while (mode){
-    demo();
-    delay(STEP_DELAY);
-  }
-  start_state();
-  Serial.println("Start WORK");
+  reset();
+
+  Serial.println("init");
+}
+
+void readSerial(){
+    if (Serial.available() > 0)
+    {
+        char recieved = Serial.read();
+        if (recieved == '\n')
+        {
+          if(inData.startsWith("name")){
+            Serial.print("name:");
+            Serial.println(NAME);
+          }else if(inData.startsWith("reset")){
+            reset();
+          }else if(inData.startsWith("finish")){
+            finish();
+          }
+
+          inData = ""; // Clear recieved buffer
+        }else{
+          inData += recieved; 
+        }
+    }
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
+  readSerial();
   test_cc();
   if(mode!=100){
     if(test_control()){

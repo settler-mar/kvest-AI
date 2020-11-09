@@ -73,31 +73,12 @@ function ws_start() {
       app.game_time = data
       return
     }
-
-    if (key == 'add'){
-      //console.log(data)
-      if (!app.db[data.year]) app.db[data.year] = {};
-      if (!app.db[data.year][data.month]) app.db[data.year][data.month] = [];
-
-      app.db[data.year][data.month].unshift(data.data)
-
-      if (data.year == app.year && data.month == app.month) {
-        app.year = typeof (app.year) == 'string' ? app.year * 1 : app.year + "";
-      }
+    if (key == 'status') {
+      app.status = JSON.parse(data)
+      return
     }
 
-    if (key == 'update'){
-      if (!app.db[data.year]) return;
-      if (!app.db[data.year][data.month]) return;
-
-      for (var i in app.db[data.year][data.month]) {
-        var item = app.db[data.year][data.month][i];
-        if (item.id == data.data.id) {
-          item = data.data;
-          return;
-        }
-      }
-    }
+    console.log(key,data)
   }
 }
 

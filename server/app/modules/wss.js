@@ -17,10 +17,8 @@ module.exports.init = (server, config) => {
     console.log('new client web', WS_clients.length);
     client.on('message', message => {
       console.log("Web command: ",message)
-      message = message.toLowerCase()
-      if(message in game_control){
-        game_control[message]()
-      }
+
+      game_control.processed(message)
     });
     client.on('close', (reasonCode, description) => {
       for (let i = 0; i < WS_clients.length; i++) {

@@ -1,7 +1,7 @@
 global.game = {
   status: 0,
   timer: "",
-  time: 0,
+  time: 0
 }
 
 global.game_control = {}
@@ -33,7 +33,7 @@ module.exports = (config) => {
       esp_action.reset();
     }
 
-    if(game.time == 0){
+    if (game.time == 0) {
       esp_action.start();
     }
     game.status = 1;
@@ -59,5 +59,17 @@ module.exports = (config) => {
     game.status = 0;
     clearInterval(timerGame);
     update_game()
+  }
+  game_control.processed = (message)=> {
+    if (message in game_control) {
+      game_control[message]()
+      return
+    }
+    message = message.split(':');
+    if (message[0] in game_control) {
+      game_control[message[0]](message[1])
+      return
+    }
+    esp_action.do(message[0], message[1])
   }
 }

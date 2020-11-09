@@ -15,3 +15,5 @@ public/css/index.css
 .idea
 package-lock.json
 *.zip
+test*
+ip_list.data

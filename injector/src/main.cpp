@@ -34,20 +34,7 @@ void uppdatePalette(){
   if(prewMode == 0 and mode == 0) return;
   Serial.println("uppdatePalette");
   prewMode = mode;
-  /*targetPalette = CRGBPalette16(CHSV(baseC+random8(32), 255, random8(128,255)),   // Create palettes with similar colours.
-                                CHSV(baseC+random8(64), 255, random8(128,255)),
-                                CHSV(baseC+random8(96), 192, random8(128,255)),
-                                CHSV(baseC+random8(16), 255, random8(128,255)));*/
-  /*targetPalette = CRGBPalette16(CHSV(random16(360), 255, 255),   // Create palettes with similar colours.
-                                CHSV(random16(360), 255, 255),
-                                CHSV(random16(360), 255, 255),
-                                CHSV(random16(360), 255, 255));*/
 
-  /*byte baseV = 64 + 16*mode;
-  byte baseVmax = baseV*2;
-  if(baseVmax>255)baseVmax=255;*/
-
-  //baseC = 255;
   targetPalette = CRGBPalette16(CHSV(BASE_COLOR + random16(10), 255, 255),   // Create palettes with similar colours.
                                 CHSV(85*2 + random16(10), 255, 255),
                                 CHSV(BASE_COLOR + random16(10), 255, 255),
@@ -105,14 +92,6 @@ void setMode(byte m){
   }else{
     uppdatePalette();
   }
-
-  /*if(mode==0 and VALUE>0){
-    VALUE = VALUE-1;
-  }
-
-  //if(prewMode == 0 and m != 0){
-    uppdatePalette();
-  //}*/
 }
 
 void loop() {
@@ -129,28 +108,6 @@ void loop() {
       // Change the target palette to a random one every N seconds.
       uppdatePalette();
     }
-
-    /*EVERY_N_MILLIS(300){
-      if(VALUE<NUM_LEDS and mode==1){
-        VALUE = VALUE+1;
-        if(VALUE>=NUM_LEDS){
-          mode=2;
-          for(int i = 0; i < NUM_LEDS; i++) {
-            currentPalette[i] = leds[i];
-          }
-        }
-      }
-
-      if(mode==0 and VALUE>0){
-        VALUE = VALUE-1;
-      }
-
-      Serial.print(mode);
-      Serial.print("-");
-      Serial.println(VALUE);
-    }*/
-
-    //LEDS.show();                                                              // Display the LED's at every loop cycle.
   }
 
   if (irrecv.decode(&results)) {

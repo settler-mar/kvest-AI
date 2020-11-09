@@ -9,7 +9,9 @@ module.exports = (router, config) => {
         year: d.getFullYear(),
         month: d.getMonth(),
         esp_list: esp_name,
-        game: game
+        game_list: esp_list,
+        game: game,
+        status:esp_status,
       };
       let meta = {
         head: {
