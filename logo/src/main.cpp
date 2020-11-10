@@ -102,23 +102,65 @@ const int codeLength = 4; // must be <= maxCapacitiveSensors
 const int nums[maxCapacitiveSensors] = {1, 5, 0, 7, 4, 2};
 // code on snake
 const int codeNums[codeLength] = {0, 2, 5, 7};
+String enterCode = "";
 // Sensor NUM from 1 to 8
 int code[codeLength];
 int input[codeLength] ;
 int counter = 0;  // input code length counter
 
+// Central Plate serial
+#define UART_S Serial //интерфейс с WI-FI модулем
+#define NAME "logo"
+String inData;
+
+void readSerial();
 // -------------------     F U N C T I O N S    -------------------------
+
+// Fill the dots one after the other with a color
+void colorWipe(uint32_t color, uint8_t wait = 0) {
+  for(uint16_t i=0; i<leds.numPixels(); i++) {
+    leds.setPixelColor(i, color);
+    leds.show();
+    delay(wait);
+  }
+}
+
+void ledsRed(void){
+    colorWipe(leds.Color(200,0,0));
+}
+void ledsGreen(void){
+    colorWipe(leds.Color(0,200,0));
+}
+void ledsBlue(void){
+    colorWipe(leds.Color(0,0,200));
+}
+void ledsOff(void){
+    colorWipe(leds.Color(0,0,0));
+}
+
 
 void setCode(){
   // Sensor NUM from 1 to 8
   // convert code on snake to sensors NUM code
   for (int j=0; j<codeLength; j++){
       for(int i=0; i<maxCapacitiveSensors; i++){
-          if(codeNums[j]==nums[i])
-            code[j]=i+1;
+        enterCode += String(nums[i]);
+        if(enterCode.length()>codeLength){
+          enterCode = enterCode.substring(1);
+        }
+        Serial.print("input:");
+        Serial.println(enterCode);
+        if(codeNums[j]==nums[i])
+          code[j]=i+1;
       }
   }
 }
+
+void IOinitialState(){
+    digitalWrite(YA, HIGH);
+    digitalWrite(DONE, HIGH);
+}
+
 void IOinit(){
     pinMode(START, INPUT);
     pinMode(RESET, INPUT);
@@ -126,11 +168,6 @@ void IOinit(){
     pinMode(DONE, OUTPUT);
     
     IOinitialState();
-}
-
-void IOinitialState(){
-    digitalWrite(YA, HIGH);
-    digitalWrite(DONE, HIGH);
 }
 
 void capacitiveSensorsInit()
@@ -141,8 +178,7 @@ void capacitiveSensorsInit()
         Serial.println("CAP1188 not found");
         while (1);
       }
-      Serial.println("CAP1188 found!");
-      
+            
       // Turn off multitouch so only one button pressed at a time
       cap.writeRegister(0x2A, 0x80);  // 0x2A default 0x80 use 0x41  — Set multiple touches back to off
       cap.writeRegister(0x41, 0x39);  // 0x41 default 0x39 use 0x41  — Set "speed up" setting back to off      
@@ -166,6 +202,16 @@ void capacitiveSensorsInit()
       for (int i=0;i<maxCapacitiveSensors;i++){
           buttonPushed[i] = false;
       }
+}
+
+void startGame(){
+    // reset capacitiveSensors;
+    capacitiveSensorsInit();
+    delay(50);
+    ledsRed();
+    enterCode = "";
+    lvl = 2;
+    counter = 0;
 }
 
 void ledsInit(void){
@@ -196,6 +242,17 @@ boolean pinPushed(byte pin){
           return true;
   }
   return false;
+}
+
+
+// set pixel color
+void setButtonColor(byte StickNum, uint32_t color){
+    
+    byte StartPixel = StickNum * PIXEL_IN_STICK;
+
+    for (byte i = StartPixel; i < (StartPixel + PIXEL_IN_STICK); i++)
+        leds.setPixelColor(i, color);
+    leds.show();
 }
 
 void checkSensors(void){
@@ -240,9 +297,10 @@ void resetCounter(void){
 
     // check code
     if(arrayCompare(input,code))
-        lvl = 4;
-    else
-        lvl = 2;
+        lvl = 3;
+    else{
+        startGame();
+    }
 
     // reset pushed state
     for (int i=0;i<maxCapacitiveSensors;i++)
@@ -255,46 +313,16 @@ void resetCounter(void){
     cap.touched();
 }
 
-// set pixel color
-void setButtonColor(byte StickNum, uint32_t color){
-    
-    byte StartPixel = StickNum * PIXEL_IN_STICK;
-
-    for (byte i = StartPixel; i < (StartPixel + PIXEL_IN_STICK); i++)
-        leds.setPixelColor(i, color);
-    leds.show();
-}
-
-// Fill the dots one after the other with a color
-void colorWipe(uint32_t color, uint8_t wait = 0) {
-  for(uint16_t i=0; i<leds.numPixels(); i++) {
-    leds.setPixelColor(i, color);
-    leds.show();
-    delay(wait);
-  }
-}
-
-void ledsRed(void){
-    colorWipe(leds.Color(200,0,0));
-}
-void ledsGreen(void){
-    colorWipe(leds.Color(0,200,0));
-}
-void ledsBlue(void){
-    colorWipe(leds.Color(0,0,200));
-}
-void ledsOff(void){
-    colorWipe(leds.Color(0,0,0));
-}
 
 void startTest(){
-   
+  UART_S.println("start");
     timer = millis();
     int c = 0;
    //enlight red
    ledsBlue();
    // after all is pushed or after timer - finish
    while(c < maxCapacitiveSensors && millis()-timer < TEST_MINUTES*60000){
+     readSerial();
       
      uint8_t touched = cap.touched();
     
@@ -315,6 +343,7 @@ void startTest(){
         cap.touched(); //reset dubble press
         delay(10);
      }
+     
    }
    delay(500);
    cap.touched(); //reset dubble press
@@ -328,16 +357,8 @@ void startTest(){
 
 void startWaiting(){
     if(pinPushed(START)){
-      lvl = 2;
-      // reset capacitiveSensors;
-      capacitiveSensorsInit();
+      startTest();
     }
-}
-
-void startGame(){
-    ledsRed();
-    lvl = 3;
-    counter = 0;
 }
 
 void playGame(){
@@ -345,49 +366,82 @@ void playGame(){
     resetCounter();
 }
 
+void finishGame(){
+  lvl = 4;
+  timer = 0;
+  digitalWrite(DONE, HIGH);
+}
+
 void doneGame(){
     // start timer
-    if(timer == 0)
-        timer = millis();
+    if(timer == 0) timer = millis();
     // Dimm LED
     ledsOff();
     // Open YA
     digitalWrite(YA, LOW);
     // finished signal
     if(millis()-timer < DONE_DELAY){
-        digitalWrite(DONE, LOW);
+      digitalWrite(DONE, LOW);
     } else {
-        lvl = 5;
-        timer = 0;
-        digitalWrite(DONE, HIGH);
+      finishGame();
     }
 }
 
+void resetGame(){
+  lvl = 1;
+  Serial.println("input:");
+  IOinitialState();
+}
+
 void resetWaiting(){
-    if(pinPushed(RESET)){
-      lvl = 1;
-      IOinitialState();
+  if(pinPushed(RESET)){
+    resetGame();
+  }
+}
+
+void readSerial(){
+    if (UART_S.available() > 0)
+    {
+        char recieved = UART_S.read();
+        if (recieved == '\n')
+        {
+          if(inData.startsWith("name")){
+            UART_S.print("name:");
+            UART_S.println(NAME);
+          }else if(inData.startsWith("reset")){
+            resetGame();
+          }else if(inData.startsWith("start")){
+            startTest();
+          }else if(inData.startsWith("finish")){
+            finishGame();
+          }
+
+          inData = ""; // Clear recieved buffer
+        }else{
+          inData += recieved; 
+        }
     }
 }
 
 // -------------------     L O O P    -------------------------
 
 void loop() {
-  
+  readSerial();
   switch(lvl){
-    case 1: startWaiting();
-        break;
-    case 2: startGame();
-        break;
-    case 3: playGame();
-        break;
-    case 4: doneGame();
-        break;
-    case 5:
-    default: resetWaiting();
-        break;    
+    case 1: 
+      startWaiting();
+      break;
+    case 2: 
+      playGame();
+      break;
+    case 3: 
+      doneGame();
+      break;
+    case 4:
+    default: 
+      resetWaiting();
+      break;    
   }
-  
   delay(50); // delay before next scan
 }
 
@@ -395,6 +449,7 @@ void loop() {
 
 void setup() {
     Serial.begin(9600);
+    UART_S.println("load");
     
     IOinit();
     
@@ -409,6 +464,7 @@ void setup() {
     delay(startupDelay);
     
     startTest();
+    UART_S.println("init");
     /*
     for (int j=0; j<codeLength; j++)
       Serial.print(String(code[j]));
