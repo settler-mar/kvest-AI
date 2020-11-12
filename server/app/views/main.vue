@@ -53,6 +53,7 @@
               <td>{{st.title}}</td>
               <td>
                 <el_list v-if="st.type=='list'" :params="st" :data="get_status(item.code,code)"/>
+                <el_text v-if="st.type=='text'" :params="st" :data="get_status(item.code,code)"/>
                 <el_progress v-else-if="st.type=='progress'" :params="st" :data="get_status(item.code,code)"/>
                 <el_status v-else-if="st.type=='status'" :params="st" :data="get_status(item.code,code)"/>
 

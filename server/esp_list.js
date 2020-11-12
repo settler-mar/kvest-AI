@@ -14,6 +14,29 @@ module.exports = [
     }
   },
   {
+    'code':'logo',
+    'name':'Лого',
+    'commands':{
+      'reset': 'Сброс',
+      'start': 'Запуск',
+      'finish': 'Завершить',
+    },
+    'status':{
+      'start': {
+        'title': 'задача запущенна',
+        'type': 'status'
+      },
+      'input': {
+        'title': 'Введенный код',
+        'type': 'text'
+      },
+      'finish': {
+        'title': 'задача окончена',
+        'type': 'status'
+      }
+    }
+  },
+  {
     'code':'doors',
     'name':'Межкомнатная дверь',
     'commands':{

@@ -70,4 +70,4 @@ __pycache__
 .gcc-flags.json
 /lib/
 arduino_ide
-
+*.zip
