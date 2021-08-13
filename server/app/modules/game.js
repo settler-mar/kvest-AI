@@ -1,7 +1,8 @@
 global.game = {
   status: 0,
   timer: "",
-  time: 0
+  time: 0,
+  lang: 'ru',
 }
 
 global.game_control = {}
@@ -60,6 +61,16 @@ module.exports = (config) => {
     clearInterval(timerGame);
     update_game()
   }
+
+  game_control.lang = (value)=> {
+    if (['ru','ua','en'].indexOf(value)<0){
+      return
+    }
+    game.lang = value;
+    esp_action.lang(value)
+    update_game()
+  }
+
   game_control.processed = (message)=> {
     if (message in game_control) {
       game_control[message]()

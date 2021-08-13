@@ -68,6 +68,7 @@ byte motorPin[][2]={{13,12},{11,10},{8,9}}; // {close,open}
 #define TEST_TIME 1000  // time ms LED ON on startup
 #define NOISE_DELAY 25  // debounce delay
 unsigned int moto_time[] = {4000,8500,8000}; //Задержка на движение дверей
+unsigned int moto_time_max = 9000;
 
 // Central Plate serial
 #define UART_S Serial //интерфейс с WI-FI модулем
@@ -200,6 +201,7 @@ void setup() {
     UART_S.println("load");
     startTest();
     reset();
+    delay(moto_time_max);
     moveMotor(0, true); // open door0
     UART_S.println("init");
 }

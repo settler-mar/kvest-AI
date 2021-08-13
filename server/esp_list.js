@@ -1,4 +1,21 @@
+
+
 module.exports = [
+  {
+    'code':'hackDevice',
+    'name':'Хакерское устройство',
+    'has_lang': true,
+    'processor': require("./app/processor/hackDevice.js"),
+    'status':{
+      'game': {
+        'title': 'Игра',
+        'type':'list',
+        'list': {
+          1: 'Вентиляция',
+        }
+      }
+    }
+  },
   {
     'code':'doors',
     'name':'Входная дверь',
@@ -79,6 +96,21 @@ module.exports = [
         'type': 'status',
         'on':['stop']
       }
+    }
+  },
+  {
+    'code':'air',
+    'name':'Система охлождения',
+    'processor': require("./app/processor/air.js"),
+    'commands':{
+      'reset': 'Сброс',
+      'start': 'Начать задание',
+    },
+    'status':{
+      'st': {
+        'title': 'Состояние',
+        'type': 'text'
+      },
     }
   },
   {

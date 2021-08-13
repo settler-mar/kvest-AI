@@ -59,6 +59,8 @@ function ws_start() {
       return
     }
 
+    console.log(key,data)
+
     if (key == 'esp_list') {
       app.esp_list = JSON.parse(data)
       return
@@ -77,8 +79,6 @@ function ws_start() {
       app.status = JSON.parse(data)
       return
     }
-
-    console.log(key,data)
   }
 }
 

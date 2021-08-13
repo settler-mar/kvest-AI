@@ -9,36 +9,42 @@ global.esp_list = require('../../esp_list');
 global.esp_name = {}
 global.esp_action = {}
 global.esp_status = {}
-let esp_calback = {}
+let esp_callback = {}
 
 
+var esp_param = ['has_lang','processor']
 
 fs.readFile(ip_file, (err, data) => {
   let ip_list = err ? {} : JSON.parse(data)
   esp_list.forEach(el => {
-      esp_name[el.code] = ip_list[el.code] ? {ip: ip_list[el.code]} : null
+      esp_name[el.code] = ip_list[el.code] ? {ip: ip_list[el.code]} : {}
+      for (let param_name of esp_param){
+        if (el[param_name]){
+          esp_name[el.code][param_name]=el[param_name]
+        }
+      }
       if (el.status) {
         for (var prop in el.status) {
           if (el.status[prop].on) {
-            if (!esp_calback[el.code]) {
-              esp_calback[el.code] = {}
+            if (!esp_callback[el.code]) {
+              esp_callback[el.code] = {}
             }
-            esp_calback[el.code][prop] = el.status[prop].on
+            esp_callback[el.code][prop] = el.status[prop].on
           }
         }
       }
     }
   );
+  console.log(esp_name)
 })
 
 const offlineTimer = 10000;
 let esp_timer = {}
 
 const reset_timer = function (code, ip) {
-  esp_name[code] = {
-    "ip": ip,
-    "online": true
-  };
+  esp_name[code].ip = ip
+  esp_name[code].online = true
+
   var ip_list = {}
   for (const [key, value] of Object.entries(esp_name)) {
     if (value && value.ip) {
@@ -60,9 +66,14 @@ const reset_timer = function (code, ip) {
   wss_send('esp_list', JSON.stringify(esp_name))
 }
 
-const sendEsp = (path, code)=> {
-  const send = (path, code)=> {
+const sendEsp = (path, code, test_property)=> {
+  const send = (path, code, test_property)=> {
+    console.log(code,path)
     if (!!esp_name[code]) {
+      if(test_property && !esp_name[code][test_property]){
+        return
+      }
+
       http.request({host: esp_name[code].ip, path}).on('error', (e) => {
         //console.error(`problem with request: ${e.message}`);
       }).end();
@@ -72,13 +83,15 @@ const sendEsp = (path, code)=> {
   }
 
   if (code) {
-    send(path, code)
+    send(path, code, test_property)
   } else {
     for (var code in esp_name) {
-      send(path, code)
+      send(path, code, test_property)
     }
   }
 }
+
+esp_action.send = sendEsp
 
 esp_action.reset = ()=> {
   console.log('esp reset')
@@ -96,12 +109,19 @@ esp_action.do = (code, event)=> {
   console.log('esp do', event)
   sendEsp('/' + event, code)
 }
+esp_action.lang = (lang) => {
+  console.log('esp lang', lang)
+  sendEsp('/lang/'+lang, false,'has_lang')
+}
+
 
 module.exports = (router, config) => {
   router.get("/esp/*", (req, res) => {
       const pathname = url.parse(req.url).pathname;
       const code = pathname.split('/')[2];
-      let command = req.header('X-COMMAND') || req.query['command'] || pathname.split('/')[3] || '';
+      let command = req.header('X-COMMAND') || req.header('x-command') || req.query['command'] || pathname.split('/')[3] || '';
+      console.log(req.header('X-COMMAND') || req.header('x-command'));
+      console.log(req.headers)
       const ip = req.query['ip'] || req.params['ip'] || req.clientIp.split(':').pop()
 
       command = command.split(':')
@@ -115,6 +135,8 @@ module.exports = (router, config) => {
 
       if (command[0] == 'start') {
         esp_status[code] = {}
+      } else if (command[0] == 'lang') {
+          sendEsp('/lang/'+game.lang, code)
       } else {
         if (!esp_status[code]) {
           esp_status[code] = {}
@@ -122,8 +144,12 @@ module.exports = (router, config) => {
         esp_status[code][command[0]] = command[1] || true;
       }
 
-      if (esp_calback[code] && esp_calback[code][command[0]]) {
-        esp_calback[code][command[0]].forEach(cmd => {
+      if (esp_name[code]['processor']){
+        esp_name[code]['processor'](code, command)
+      }
+
+      if (esp_callback[code] && esp_callback[code][command[0]]) {
+        esp_callback[code][command[0]].forEach(cmd => {
           game_control.processed(cmd)
         })
       }

@@ -12,6 +12,14 @@
         <button v-on:click="evStart" v-if="game.status==2">Продолжить</button>
         <button v-on:click="evPause" v-if="game.status==1">Пауза</button>
       </span>
+      <div>
+        Язык игры
+        <select v-on:change="setLang" v-model="game.lang">
+          <option value="ru">Рус</option>
+          <option value="ua">Укр</option>
+          <option value="en">Англ</option>
+        </select>
+      </div>
       <span>{{time}}</span>
     </nav>
     <section class="main">
@@ -73,6 +81,7 @@
   import el_list from './components/el_list.vue'
   import el_progress from './components/el_progress.vue'
   import el_status from './components/el_status.vue'
+  import el_text from './components/el_text.vue'
 
   export default {
     data: function () {
@@ -89,7 +98,7 @@
       }
     },
     components: {
-      el_list, el_progress,el_status
+      el_list, el_progress,el_status,el_text
     },
     methods: {
       evStart(e){
@@ -113,6 +122,9 @@
           return this.status[el][code]
         }
         return NaN
+      },
+      setLang(e){
+        ws.send(["lang",e.srcElement.value].join(':'))
       }
     },
     mounted() {
