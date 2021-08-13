@@ -7,15 +7,20 @@
 //#include <ESP8266HTTPClient.h>
 #include <ArduinoHttpClient.h>
 
-#include "FS.h" // SPIFFS is declared
 
 ESP8266WiFiMulti WiFiMulti;
 
 String inData;
-#define host "192.168.0.114"
-#define httpPort 3000
-#define SSID "Settler-test"
-#define WIFI_PASS "12346579"
+// #define host "192.168.0.114"
+// #define httpPort 3000
+// #define SSID "Settler-test"
+// #define WIFI_PASS "12346579"
+#define host "192.168.0.100"
+#define httpPort 8080
+#define SSID "ai"
+#define WIFI_PASS "66430346"
+
+#define SEND_BY_X_COMMAND 
 
 String name = "start";
 boolean set_name = false; //Обовленно ли имя
@@ -26,13 +31,13 @@ boolean set_name = false; //Обовленно ли имя
 // Current time
 unsigned long currentTime = millis();
 // Previous time
-unsigned long previousTime = 0; 
+unsigned long previousTime = 0;
 
 WiFiServer server(80);
 
 
 
-void get(){
+void get() {
   WiFiClient client = server.available();   // Listen for incoming clients
 
   if (client) {                             // If a new client connects,
@@ -41,28 +46,31 @@ void get(){
     currentTime = millis();
     previousTime = currentTime;
     while (client.connected() && currentTime - previousTime <= timeoutTime) { // loop while the client's connected
-      currentTime = millis();         
+      currentTime = millis();
       if (client.available()) {             // if there's bytes to read from the client,
         char c = client.read();             // read a byte, then
         if (c == '\n') {                    // if the byte is a newline character
-          if (currentLine.length() > 0 and currentLine.indexOf("GET")>=0) {
+          if (currentLine.length() > 0 and currentLine.indexOf("GET") >= 0) {
             if (currentLine.indexOf("GET /getName") >= 0) {
               Serial.println("name");
               client.println("ok");
               client.stop();
               return;
-            }else{
-              int st = currentLine.indexOf("GET /")+5;
-              int en = currentLine.indexOf(" ", st+1);
-              if(en>0){
-                Serial.println(currentLine.substring(st,en));  
-              }else{
+            }
+            else {
+              int st = currentLine.indexOf("GET /") + 5;
+              int en = currentLine.indexOf(" ", st + 1);
+              if (en > 0) {
+                Serial.println(currentLine.substring(st, en));
+              }
+              else {
                 Serial.println(currentLine.substring(st));
               }
             }
           }
-          client.readString();     
-        } else if (c != '\r') {  // if you got anything else but a carriage return character,
+          client.readString();
+        }
+        else if (c != '\r') {  // if you got anything else but a carriage return character,
           currentLine += c;      // add it to the end of the currentLine
         }
       }
@@ -94,7 +102,7 @@ void send(String url_ = ""){
 
   Serial.println(url);
   int httpCode = http.GET();
-  
+
   if(httpCode > 0) {
     Serial.println(httpCode);
     //if(httpCode == HTTP_CODE_OK) {
@@ -112,20 +120,69 @@ void send(String url_ = ""){
   client.stop();
 }/**/
 
-void send(String url_ = ""){
+String clearName(String txt) {
+  String out = "";
+  for (byte i = 0; i < txt.length() + 1;i++) {
+    if (txt.charAt(i) >= 0x30 and txt.charAt(i) <= 0x39) { // 0..9
+      out += txt.charAt(i);
+    }
+    if (txt.charAt(i) >= 0x41 and txt.charAt(i) <= 0x5A) { //A-Z
+      out += txt.charAt(i);
+    }
+    if (txt.charAt(i) >= 0x61 and txt.charAt(i) <= 0x7A) { //a-z
+      out += txt.charAt(i);
+    }
+    if (txt.charAt(i) == 0x3A) { // :
+      out += txt.charAt(i);
+    }
+  }
+  return out;
+}
+
+void send(String url_ = "") {
   WiFiClient wifi;
   HttpClient client = HttpClient(wifi, host, httpPort);
 
-  String url="/esp/"+name;
-  
-  char url2[url.length()+1];
-  url.toCharArray(url2, url.length());
+#ifdef SEND_BY_X_COMMAND
+  String url = "/esp/" + name;
+#else
+  String url = "/esp/" + name;
+  if (url_ != "") {
+    url += "/" + url_;
+  }
+#endif
 
-  //Serial.println(url2);
+  byte url_len = url.length() + 1;
+  char url2[url_len];
+  url.toCharArray(url2, url_len);
+
+  Serial.print("send: ");
+  Serial.print(url2);
+  Serial.print(" | ");
+  Serial.print(url_);
+  Serial.print(" | ");
+  Serial.println(url_len);
+  // for (byte i = 0; i < url_len;i++) {
+  //   Serial.print(i);
+  //   Serial.print(": ");
+  //   Serial.println(url2[i], HEX);
+  // }
 
   client.beginRequest();
   client.get(url2);
-  client.sendHeader("X-COMMAND", url_);
+#ifdef SEND_BY_X_COMMAND
+  if (url_ != "") {
+    url_ = clearName(url_);
+    url_len = url_.length() + 1;
+    char url_2[url_len];
+    url_.toCharArray(url_2, url_len);
+
+    client.sendHeader("X-COMMAND", url_2);
+    client.sendHeader("test", url_len);
+    client.sendHeader("ZA", url2);
+    Serial.println(url_len);
+  }
+#endif
   client.endRequest();
 }/**/
 /*
@@ -148,7 +205,7 @@ void send(String url = ""){
 
   url="/esp/"+ name + url;
 
-  String req = String("GET ") + url + " HTTP/1.0\r\n" + 
+  String req = String("GET ") + url + " HTTP/1.0\r\n" +
    "Host: " + host + ":" + String(httpPort) + "\r\n" +
    "User-Agent: ESP01\r\n" +
    "Connection: close\r\n" +
@@ -164,27 +221,26 @@ void send(String url = ""){
 
   unsigned long timeout = millis();
   while (client.available() == 0) {
-    if (millis() - timeout > timeoutTime){ 
+    if (millis() - timeout > timeoutTime){
       Serial.println(">>> Client Timeout !");
       client.stop();
       return;
     }
-  } 
-  
+  }
+
   // Read all the lines of the reply from server and print them to Serial
   while (client.available())
-  { 
+  {
     String line = client.readStringUntil('\r'); Serial.println(line);
     client.readString();
   }
   //Serial.println();
-  //Serial.println("closing connection"); 
+  //Serial.println("closing connection");
   client.stop();
 }/**/
 
-
 void setup() {
-	Serial.begin(9600);
+  Serial.begin(9600);
 
   SPIFFS.begin();
   delay(600);
@@ -194,24 +250,26 @@ void setup() {
 
   File f = SPIFFS.open("/f.txt", "r");
   if (f) {
-    name = f.readString();
+    name = clearName(f.readString());
     f.close();
   }
 
-	//Serial.setDebugOutput(true);
-	Serial.setDebugOutput(false);
+  //Serial.setDebugOutput(true);
+  Serial.setDebugOutput(false);
 
-	Serial.println();
-	Serial.println();
-	Serial.println();
+  Serial.println();
+  Serial.println();
+  Serial.println();
 
   WiFiMulti.addAP(SSID, WIFI_PASS);
 
+  Serial.print("[SETUP] SSID: ");Serial.println(SSID);
+
   Serial.print("[SETUP] WIFI connect");
-	while(WiFiMulti.run() != WL_CONNECTED) {
+  while (WiFiMulti.run() != WL_CONNECTED) {
     Serial.print(".");
-		delay(100);
-	}
+    delay(100);
+  }
   Serial.println("OK");
 
   Serial.println("IP address: ");
@@ -222,42 +280,53 @@ void setup() {
   Serial.println();
 }
 
-void readSerial(){
-    if (Serial.available() > 0)
+void readSerial() {
+  if (Serial.available() > 0)
+  {
+    char recieved = Serial.read();
+    if (recieved == '\n')
     {
-        char recieved = Serial.read();
-        if (recieved == '\n')
-        {
-          if(inData.startsWith("name:")){
-            name = inData.substring(5);
-            if(name.length()>5){
-              set_name = true;
-              File configFile = SPIFFS.open("/f.txt", "w");
-              configFile.print(name);
-              configFile.close();
+      // Serial.println("DO");
 
-              send();
-            }
-          }else{
-            send(inData);
-          }
+      if (inData.startsWith("name:")) {
+        // Serial.println("Get name");
+        name = clearName(inData.substring(5));
+        if (name.length() > 2) {
+          set_name = true;
+          File configFile = SPIFFS.open("/f.txt", "w");
+          configFile.print(name);
+          configFile.close();
 
-          //Serial.print("Arduino Received: ");
-          //Serial.println(inData);
-          inData = ""; // Clear recieved buffer
-        }else{
-          inData += recieved; 
+          send();
         }
+      }
+      else {
+        send(inData);
+      }
+
+      //Serial.print("Arduino Received: ");
+      //Serial.println(inData);
+      inData = ""; // Clear recieved buffer
     }
+    else {
+      inData += recieved;
+      // Serial.println(inData); 
+    }
+  }
 }
 
 void loop() {
-  if(not set_name){
-    if((millis() % 5000 == 0) && (previousTime < millis())){
-      previousTime = millis()+1000;
+  if ((millis() % 5000 == 0) && (previousTime < millis())) {
+    if (not set_name) {
+      previousTime = millis() + 1000;
       Serial.println("name");
+      send();
+    }
+    else {
+      previousTime = millis() + 8000;
+      send();
     }
   }
-	readSerial();
+  readSerial();
   get();
 }
