@@ -6,6 +6,7 @@ module.exports = [
     'name':'Хакерское устройство',
     'has_lang': true,
     'processor': require("./app/processor/hackDevice.js"),
+    'onDisconnect':require("./app/processor/hackDevice_disconnect.js"),
     'status':{
       'game': {
         'title': 'Игра',

@@ -3,7 +3,7 @@ const url = require('url');
 const http = require('http');
 const colors = require('colors');
 const fs = require('fs');
-const ip_file='ip_list.data'
+const ip_file = 'ip_list.data'
 
 global.esp_list = require('../../esp_list');
 global.esp_name = {}
@@ -12,15 +12,15 @@ global.esp_status = {}
 let esp_callback = {}
 
 
-var esp_param = ['has_lang','processor']
+var esp_param = ['has_lang', 'processor','onDisconnect']
 
 fs.readFile(ip_file, (err, data) => {
   let ip_list = err ? {} : JSON.parse(data)
   esp_list.forEach(el => {
       esp_name[el.code] = ip_list[el.code] ? {ip: ip_list[el.code]} : {}
-      for (let param_name of esp_param){
-        if (el[param_name]){
-          esp_name[el.code][param_name]=el[param_name]
+      for (let param_name of esp_param) {
+        if (el[param_name]) {
+          esp_name[el.code][param_name] = el[param_name]
         }
       }
       if (el.status) {
@@ -52,7 +52,8 @@ const reset_timer = function (code, ip) {
     }
   }
 
-  fs.writeFile(ip_file, JSON.stringify(ip_list),() => {});
+  fs.writeFile(ip_file, JSON.stringify(ip_list), () => {
+  });
 
   if (esp_timer[code]) {
     clearTimeout(esp_timer[code])
@@ -61,6 +62,10 @@ const reset_timer = function (code, ip) {
   esp_timer[code] = setTimeout(function (code) {
     esp_name[code]['online'] = false;
     wss_send('esp_list', JSON.stringify(esp_name));
+
+    if (esp_name[code]['onDisconnect']) {
+      esp_name[code]['onDisconnect']()
+    }
   }, offlineTimer, code);
 
   wss_send('esp_list', JSON.stringify(esp_name))
@@ -68,9 +73,9 @@ const reset_timer = function (code, ip) {
 
 const sendEsp = (path, code, test_property)=> {
   const send = (path, code, test_property)=> {
-    console.log(code,path)
+    // console.log(code, path)
     if (!!esp_name[code]) {
-      if(test_property && !esp_name[code][test_property]){
+      if (test_property && !esp_name[code][test_property]) {
         return
       }
 
@@ -111,7 +116,7 @@ esp_action.do = (code, event)=> {
 }
 esp_action.lang = (lang) => {
   console.log('esp lang', lang)
-  sendEsp('/lang/'+lang, false,'has_lang')
+  sendEsp('/lang/' + lang, false, 'has_lang')
 }
 
 
@@ -120,8 +125,8 @@ module.exports = (router, config) => {
       const pathname = url.parse(req.url).pathname;
       const code = pathname.split('/')[2];
       let command = req.header('X-COMMAND') || req.header('x-command') || req.query['command'] || pathname.split('/')[3] || '';
-      console.log(req.header('X-COMMAND') || req.header('x-command'));
-      console.log(req.headers)
+      // console.log(req.header('X-COMMAND') || req.header('x-command'));
+      // console.log(req.headers)
       const ip = req.query['ip'] || req.params['ip'] || req.clientIp.split(':').pop()
 
       command = command.split(':')
@@ -136,7 +141,7 @@ module.exports = (router, config) => {
       if (command[0] == 'start') {
         esp_status[code] = {}
       } else if (command[0] == 'lang') {
-          sendEsp('/lang/'+game.lang, code)
+        sendEsp('/lang/' + game.lang, code)
       } else {
         if (!esp_status[code]) {
           esp_status[code] = {}
@@ -144,7 +149,7 @@ module.exports = (router, config) => {
         esp_status[code][command[0]] = command[1] || true;
       }
 
-      if (esp_name[code]['processor']){
+      if (esp_name[code]['processor']) {
         esp_name[code]['processor'](code, command)
       }
 

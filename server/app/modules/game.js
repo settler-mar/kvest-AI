@@ -3,6 +3,7 @@ global.game = {
   timer: "",
   time: 0,
   lang: 'ru',
+  device_game: 0
 }
 
 global.game_control = {}
@@ -38,8 +39,9 @@ module.exports = (config) => {
       esp_action.start();
     }
     game.status = 1;
+    game.device_game = 1;
 
-    clearInterval(timerGame)
+    clearInterval(timerGame);
     timerGame = setInterval(()=> {
       game.time++;
       update_game()
@@ -63,11 +65,15 @@ module.exports = (config) => {
   }
 
   game_control.lang = (value)=> {
-    if (['ru','ua','en'].indexOf(value)<0){
+    if (['ru', 'ua', 'en'].indexOf(value) < 0) {
       return
     }
     game.lang = value;
     esp_action.lang(value)
+    update_game()
+  }
+  game_control.game = (value)=> {
+    game.device_game = value;
     update_game()
   }
 

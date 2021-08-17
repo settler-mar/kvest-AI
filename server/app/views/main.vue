@@ -8,7 +8,7 @@
       <span>
         <button v-on:click="evReset" v-if="game.status==0">Сброс</button>
         <button v-on:click="evStart" v-if="game.status==0">Старт</button>
-        <button v-on:click="evStop"  v-if="game.status==1 || game.status==2">Стоп</button>
+        <button v-on:click="evStop" v-if="game.status==1 || game.status==2">Стоп</button>
         <button v-on:click="evStart" v-if="game.status==2">Продолжить</button>
         <button v-on:click="evPause" v-if="game.status==1">Пауза</button>
       </span>
@@ -20,16 +20,24 @@
           <option value="en">Англ</option>
         </select>
       </div>
+
+      <div>
+        Активная игры
+        <select v-model="game.device_game" v-on:change="setGame">
+          <option value="1">Вентиляция</option>
+          <option value="2">Взлом двери</option>
+        </select>
+      </div>
       <span>{{time}}</span>
     </nav>
     <section class="main">
       <table class="esp_status">
         <thead>
-          <tr>
-            <th>CODE</th>
-            <th>IP</th>
-            <th>STATUS</th>
-          </tr>
+        <tr>
+          <th>CODE</th>
+          <th>IP</th>
+          <th>STATUS</th>
+        </tr>
         </thead>
         <tr v-for="item in esp_table">
           <td>{{item.code}}</td>
@@ -47,27 +55,27 @@
         </tr>
         </thead>
         <tbody>
-          <template v-for="(item,i) in game_list">
-            <tr>
-              <td :rowspan="Object.keys(item.status).length + 1">{{item.name}}</td>
-              <td colspan="2"></td>
-              <td :rowspan="Object.keys(item.status).length + 1">
-                <div v-for="(title, com) in item.commands">
-                  <button v-on:click="evCommand(item.code,com)">{{title}}</button>
-                </div>
-              </td>
-            </tr>
-            <tr v-for="(st,code) in item.status">
-              <td>{{st.title}}</td>
-              <td>
-                <el_list v-if="st.type=='list'" :params="st" :data="get_status(item.code,code)"/>
-                <el_text v-if="st.type=='text'" :params="st" :data="get_status(item.code,code)"/>
-                <el_progress v-else-if="st.type=='progress'" :params="st" :data="get_status(item.code,code)"/>
-                <el_status v-else-if="st.type=='status'" :params="st" :data="get_status(item.code,code)"/>
+        <template v-for="(item,i) in game_list">
+          <tr>
+            <td :rowspan="Object.keys(item.status).length + 1">{{item.name}}</td>
+            <td colspan="2"></td>
+            <td :rowspan="Object.keys(item.status).length + 1">
+              <div v-for="(title, com) in item.commands">
+                <button v-on:click="evCommand(item.code,com)">{{title}}</button>
+              </div>
+            </td>
+          </tr>
+          <tr v-for="(st,code) in item.status">
+            <td>{{st.title}}</td>
+            <td>
+              <el_list v-if="st.type=='list'" :params="st" :data="get_status(item.code,code)"/>
+              <el_text v-if="st.type=='text'" :params="st" :data="get_status(item.code,code)"/>
+              <el_progress v-else-if="st.type=='progress'" :params="st" :data="get_status(item.code,code)"/>
+              <el_status v-else-if="st.type=='status'" :params="st" :data="get_status(item.code,code)"/>
 
-              </td>
-            </tr>
-          </template>
+            </td>
+          </tr>
+        </template>
         </tbody>
       </table>
     </section>
@@ -94,11 +102,11 @@
         weight: '-',
         months: ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'],
         loading: false,
-        db:[],
+        db: [],
       }
     },
     components: {
-      el_list, el_progress,el_status,el_text
+      el_list, el_progress, el_status, el_text
     },
     methods: {
       evStart(e){
@@ -113,19 +121,23 @@
       evPause(e){
         ws.send('pause')
       },
-      evCommand(name,command){
-        console.log([name,command].join(':'))
-        ws.send([name,command].join(':'))
+      evCommand(name, command){
+        console.log([name, command].join(':'))
+        ws.send([name, command].join(':'))
       },
       get_status(el, code){
-        if(this.status[el] && this.status[el][code]){
+        if (this.status[el] && this.status[el][code]) {
           return this.status[el][code]
         }
         return NaN
       },
       setLang(e){
-        ws.send(["lang",e.srcElement.value].join(':'))
+        ws.send(["lang", e.srcElement.value].join(':'))
+      },
+      setGame(e){
+        ws.send(["game", e.srcElement.value].join(':'))
       }
+
     },
     mounted() {
       //fetch('data')
@@ -134,12 +146,12 @@
     computed: {
       esp_table(){
         var out = []
-        for(var code in this.esp_list){
+        for (var code in this.esp_list) {
           var item = this.esp_list[code]
           out.push({
             code,
-            ip:item?item.ip:'',
-            online:item?item.online:false,
+            ip: item ? item.ip : '',
+            online: item ? item.online : false,
           })
         }
         return out
