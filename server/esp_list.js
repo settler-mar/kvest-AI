@@ -2,33 +2,42 @@
 
 module.exports = [
   {
-    'code':'hackDevice',
-    'name':'Хакерское устройство',
-    'has_lang': true,
-    'processor': require("./app/processor/hackDevice.js"),
-    'onDisconnect':require("./app/processor/hackDevice_disconnect.js"),
-    'status':{
-      'game': {
-        'title': 'Игра',
-        'type':'list',
-        'list': {
-          1: 'Вентиляция',
-        }
-      }
-    }
-  },
-  {
     'code':'doors',
     'name':'Входная дверь',
     'commands':{
       'open0': 'Открыть',
       'close0': 'Закрыть',
+      'ch0': 'Вкл/выкл подсветка',
     },
     'status':{
       'door0': {
         'title': '',
         'type': 'status',
-      }
+      },
+      'digital0': {
+        'title': 'подсветка',
+        'type': 'status'
+      },
+    }
+  },
+  {
+    'code': '_',
+    'name': 'Название игры',
+    'status':{
+      'start': {
+        'title': '',
+        'type': 'text'
+      },
+    }
+  },
+  {
+    'code': '_',
+    'name': 'Змейка',
+    'status':{
+      'start': {
+        'title': 'Уровень',
+        'type': 'text'
+      },
     }
   },
   {
@@ -55,6 +64,46 @@ module.exports = [
     }
   },
   {
+    'code':'air',
+    'name':'Питание. Шкаф замка',
+    'status': {
+      'pulse0': {
+        'title': 'Замок',
+        'type': 'status'
+      },
+      'digital0': {
+        'title': 'Порт устройства',
+        'type': 'status'
+      }
+    },
+    'commands': {
+      'relay0': 'Открыть замок',
+      'ch0': 'Вкл/выкл порт',
+    }
+  },
+  {
+    'code':'hackDevice',
+    'name':'Кодовый замок',
+    'commands':{
+      // 'reset': 'Сброс',
+      // 'start': 'Начать задание',
+    },
+    'status':{
+      'code_r': {
+        'title': 'Код двери',
+        'type': 'text'
+      },
+      'code_p': {
+        'title': 'Введенный код',
+        'type': 'text'
+      },
+      'finish_2': {
+        'title': 'задача окончена',
+        'type': 'status'
+      }
+    }
+  },
+  {
     'code':'doors',
     'name':'Межкомнатная дверь',
     'commands':{
@@ -66,6 +115,16 @@ module.exports = [
         'title': '',
         'type': 'status',
       }
+    }
+  },
+  {
+    'code': '_',
+    'name': 'Спутники',
+    'status':{
+      'start': {
+        'title': 'Захваченно спутников',
+        'type': 'text'
+      },
     }
   },
   {
@@ -101,8 +160,25 @@ module.exports = [
   },
   {
     'code':'air',
+    'name':'Питание. Шкаф венитиляции',
+    'status': {
+      'pulse1': {
+        'title': 'Замок',
+        'type': 'status'
+      },
+      'digital1': {
+        'title': 'Порт устройства',
+        'type': 'status'
+      }
+    },
+    'commands': {
+      'relay1': 'Открыть замок',
+      'ch1': 'Вкл/выкл порт',
+    }
+  },
+  {
+    'code':'air',
     'name':'Система охлождения',
-    'processor': require("./app/processor/air.js"),
     'commands':{
       'reset': 'Сброс',
       'start': 'Начать задание',

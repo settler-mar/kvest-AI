@@ -3,21 +3,22 @@ const url = require('url');
 const http = require('http');
 const colors = require('colors');
 const fs = require('fs');
-const ip_file = 'ip_list.data'
+const ip_file = 'ip_list.data';
 
 global.esp_list = require('../../esp_list');
-global.esp_name = {}
-global.esp_action = {}
-global.esp_status = {}
-let esp_callback = {}
+global.esp_congigs = require('../../esp_congigs');
+global.esp_name = {};
+global.esp_action = {};
+global.esp_status = {};
+let esp_callback = {};
 
 
-var esp_param = ['has_lang', 'processor','onDisconnect']
+var esp_param = ['has_lang', 'processor', 'onDisconnect'];
 
 fs.readFile(ip_file, (err, data) => {
   let ip_list = err ? {} : JSON.parse(data)
-  esp_list.forEach(el => {
-      esp_name[el.code] = ip_list[el.code] ? {ip: ip_list[el.code]} : {}
+  esp_congigs.forEach(el => {
+      esp_name[el.code] = ip_list[el.code] ? {ip: ip_list[el.code]} : {};
       for (let param_name of esp_param) {
         if (el[param_name]) {
           esp_name[el.code][param_name] = el[param_name]
@@ -39,13 +40,13 @@ fs.readFile(ip_file, (err, data) => {
 })
 
 const offlineTimer = 10000;
-let esp_timer = {}
+let esp_timer = {};
 
 const reset_timer = function (code, ip) {
-  esp_name[code].ip = ip
-  esp_name[code].online = true
+  esp_name[code].ip = ip;
+  esp_name[code].online = true;
 
-  var ip_list = {}
+  var ip_list = {};
   for (const [key, value] of Object.entries(esp_name)) {
     if (value && value.ip) {
       ip_list[key] = value.ip
@@ -73,7 +74,7 @@ const reset_timer = function (code, ip) {
 
 const sendEsp = (path, code, test_property)=> {
   const send = (path, code, test_property)=> {
-    // console.log(code, path)
+    // console.log('>', code, path)
     if (!!esp_name[code]) {
       if (test_property && !esp_name[code][test_property]) {
         return
@@ -85,7 +86,7 @@ const sendEsp = (path, code, test_property)=> {
     } else {
       //console.log(code,'is offline')
     }
-  }
+  };
 
   if (code) {
     send(path, code, test_property)
@@ -94,28 +95,28 @@ const sendEsp = (path, code, test_property)=> {
       send(path, code, test_property)
     }
   }
-}
+};
 
-esp_action.send = sendEsp
+esp_action.send = sendEsp;
 
 esp_action.reset = ()=> {
-  console.log('esp reset')
-  esp_status = {}
+  console.log('esp reset');
+  esp_status = {};
   wss_send('status', JSON.stringify(esp_status));
   sendEsp('/reset')
 }
 
 esp_action.start = ()=> {
-  console.log('esp start')
+  console.log('esp start');
   sendEsp('/start')
 }
 
 esp_action.do = (code, event)=> {
-  console.log('esp do', event)
+  console.log('esp do', event);
   sendEsp('/' + event, code)
 }
 esp_action.lang = (lang) => {
-  console.log('esp lang', lang)
+  console.log('esp lang', lang);
   sendEsp('/lang/' + lang, false, 'has_lang')
 }
 
@@ -127,9 +128,9 @@ module.exports = (router, config) => {
       let command = req.header('X-COMMAND') || req.header('x-command') || req.query['command'] || pathname.split('/')[3] || '';
       // console.log(req.header('X-COMMAND') || req.header('x-command'));
       // console.log(req.headers)
-      const ip = req.query['ip'] || req.params['ip'] || req.clientIp.split(':').pop()
+      const ip = req.query['ip'] || req.params['ip'] || req.clientIp.split(':').pop();
 
-      command = command.split(':')
+      command = command.split(':');
       console.log(colors.green(code), colors.yellow(ip), command);
 
       if (!esp_name.hasOwnProperty(code)) {
@@ -138,10 +139,20 @@ module.exports = (router, config) => {
       }
       reset_timer(code, ip);
 
-      if (command[0] == 'start') {
-        esp_status[code] = {}
-      } else if (command[0] == 'lang') {
+      if (command.length < 2) {
+        command[1] = 1
+      }
+      // if (command[0] == 'start') {
+      //   esp_status[code] = {}
+      // } else
+      if (command[0] == 'lang') {
         sendEsp('/lang/' + game.lang, code)
+      } else if (command[0] == 'reset_game') {
+        game_control.stop()
+        game_control.reset()
+      }
+      else if (command[0] == 'start_game') {
+        game_control.start()
       } else {
         if (!esp_status[code]) {
           esp_status[code] = {}

@@ -8,20 +8,19 @@
   //
   export default {
     data: function () {
-      return {
-      }
+      return {}
     },
-    props:['params','data'],
+    props: ['params', 'data'],
     computed: {
       value(){
-        if (this.data==NaN){
+        if (this.data == NaN) {
           return ''
         }
-        return 'el_status el_status_'+this.data
+        return 'el_status el_status_' + this.data
         //return typeof (this.data||'');
       }
     },
-    mounted:function(){
+    mounted: function () {
       //console.log(this.item)
     }
   }

@@ -2,6 +2,7 @@ global.game = {
   status: 0,
   timer: "",
   time: 0,
+  game_time: 60 * 60,
   lang: 'ru',
   device_game: 0
 }
@@ -16,10 +17,16 @@ module.exports = (config) => {
     return '0' + n
   }
 
+  int_to_time = (i) => {
+    let s = i % 60;
+    let m = (i - s) / 60;
+    return fZero(m) + ":" + fZero(s)
+  }
+
   update_game = ()=> {
-    let s = game.time % 60;
-    let m = (game.time - s) / 60;
-    game.timer = fZero(m) + ":" + fZero(s)
+    game.timer = int_to_time(game.game_time - game.time)
+    game.timer += " / " + int_to_time(game.game_time)
+
     wss_send('game', JSON.stringify(game))
   }
 
@@ -27,6 +34,10 @@ module.exports = (config) => {
     game.status = 2;
     clearInterval(timerGame)
     update_game()
+  }
+
+  game_control.addTime = ()=> {
+    game.game_time += 60 * 5
   }
 
   game_control.start = ()=> {
@@ -39,7 +50,8 @@ module.exports = (config) => {
       esp_action.start();
     }
     game.status = 1;
-    game.device_game = 1;
+    game.device_game = 2;
+    game.game_time = 60 * 60;
 
     clearInterval(timerGame);
     timerGame = setInterval(()=> {
@@ -47,8 +59,15 @@ module.exports = (config) => {
       update_game()
     }, 1000)
 
+    //изменяем статус устройств
+    setTimeout(()=> {
+      // включаем порты для хакерского устройства
+      esp_action.send('on0', 'air');
+      esp_action.send('on1', 'air');
+    }, 1000);
+
     update_game()
-  }
+  };
 
   game_control.reset = ()=> {
     game.status = 0;
@@ -59,7 +78,7 @@ module.exports = (config) => {
   }
 
   game_control.stop = ()=> {
-    game.status = 0;
+    game.status = -1;
     clearInterval(timerGame);
     update_game()
   }

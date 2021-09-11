@@ -6,11 +6,12 @@
     <nav>
       <span>Текущая игра: {{game.timer}}</span>
       <span>
-        <button v-on:click="evReset" v-if="game.status==0">Сброс</button>
+        <button v-on:click="evReset" v-if="game.status==0 || game.status==-1">Сброс</button>
         <button v-on:click="evStart" v-if="game.status==0">Старт</button>
         <button v-on:click="evStop" v-if="game.status==1 || game.status==2">Стоп</button>
         <button v-on:click="evStart" v-if="game.status==2">Продолжить</button>
         <button v-on:click="evPause" v-if="game.status==1">Пауза</button>
+        <button v-on:click="evAddTime" v-if="game.status==1 || game.status==2">+5min</button>
       </span>
       <div>
         Язык игры
@@ -55,10 +56,10 @@
         </tr>
         </thead>
         <tbody>
-        <template v-for="(item,i) in game_list">
-          <tr>
+        <template v-for="(item,i) in game_list" v-if="item.display!==false">
+          <tr class="device_line">
             <td :rowspan="Object.keys(item.status).length + 1">{{item.name}}</td>
-            <td colspan="2"></td>
+            <td colspan="2" style="padding: 0;"></td>
             <td :rowspan="Object.keys(item.status).length + 1">
               <div v-for="(title, com) in item.commands">
                 <button v-on:click="evCommand(item.code,com)">{{title}}</button>
@@ -120,6 +121,9 @@
       },
       evPause(e){
         ws.send('pause')
+      },
+      evAddTime(e){
+        ws.send('addTime')
       },
       evCommand(name, command){
         console.log([name, command].join(':'))
