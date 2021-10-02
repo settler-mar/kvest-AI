@@ -5,7 +5,7 @@ module.exports = (router, config) => {
     (req, res) => {
       var d = new Date();
       const data = {
-        title: config.appName||"Квест <<Искуственный интелект>>",
+        title: config.appName||"Квест <<Искусственный интеллект>>",
         year: d.getFullYear(),
         month: d.getMonth(),
         esp_list: esp_name,

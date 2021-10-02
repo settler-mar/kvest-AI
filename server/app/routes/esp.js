@@ -13,7 +13,7 @@ global.esp_status = {};
 let esp_callback = {};
 
 
-var esp_param = ['has_lang', 'processor', 'onDisconnect'];
+var esp_param = ['has_lang', 'processor', 'onDisconnect', 'send'];
 
 fs.readFile(ip_file, (err, data) => {
   let ip_list = err ? {} : JSON.parse(data)
@@ -80,9 +80,13 @@ const sendEsp = (path, code, test_property)=> {
         return
       }
 
-      http.request({host: esp_name[code].ip, path}).on('error', (e) => {
-        //console.error(`problem with request: ${e.message}`);
-      }).end();
+      if (esp_name[code]['send']) {
+        esp_name[code]['send'](path)
+      } else {
+        http.request({host: esp_name[code].ip, path}).on('error', (e) => {
+          //console.error(`problem with request: ${e.message}`);
+        }).end();
+      }
     } else {
       //console.log(code,'is offline')
     }

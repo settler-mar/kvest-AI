@@ -1,15 +1,13 @@
-
-
 module.exports = [
   {
-    'code':'doors',
-    'name':'Входная дверь',
-    'commands':{
+    'code': 'doors',
+    'name': 'Входная дверь',
+    'commands': {
       'open0': 'Открыть',
       'close0': 'Закрыть',
       'ch0': 'Вкл/выкл подсветка',
     },
-    'status':{
+    'status': {
       'door0': {
         'title': '',
         'type': 'status',
@@ -23,7 +21,7 @@ module.exports = [
   {
     'code': '_',
     'name': 'Название игры',
-    'status':{
+    'status': {
       'start': {
         'title': '',
         'type': 'text'
@@ -33,7 +31,7 @@ module.exports = [
   {
     'code': '_',
     'name': 'Змейка',
-    'status':{
+    'status': {
       'start': {
         'title': 'Уровень',
         'type': 'text'
@@ -41,14 +39,14 @@ module.exports = [
     }
   },
   {
-    'code':'logo',
-    'name':'Лого',
-    'commands':{
+    'code': 'logo',
+    'name': 'Лого',
+    'commands': {
       'reset': 'Сброс',
       'start': 'Запуск',
       'finish': 'Завершить',
     },
-    'status':{
+    'status': {
       'start': {
         'title': 'задача запущенна',
         'type': 'status'
@@ -64,8 +62,8 @@ module.exports = [
     }
   },
   {
-    'code':'air',
-    'name':'Питание. Шкаф замка',
+    'code': 'air',
+    'name': 'Питание. Шкаф замка',
     'status': {
       'pulse0': {
         'title': 'Замок',
@@ -82,13 +80,13 @@ module.exports = [
     }
   },
   {
-    'code':'hackDevice',
-    'name':'Кодовый замок',
-    'commands':{
+    'code': 'hackDevice',
+    'name': 'Кодовый замок',
+    'commands': {
       // 'reset': 'Сброс',
       // 'start': 'Начать задание',
     },
-    'status':{
+    'status': {
       'code_r': {
         'title': 'Код двери',
         'type': 'text'
@@ -104,13 +102,13 @@ module.exports = [
     }
   },
   {
-    'code':'doors',
-    'name':'Межкомнатная дверь',
-    'commands':{
+    'code': 'doors',
+    'name': 'Межкомнатная дверь',
+    'commands': {
       'open1': 'Открыть',
       'close1': 'Закрыть',
     },
-    'status':{
+    'status': {
       'door1': {
         'title': '',
         'type': 'status',
@@ -118,9 +116,23 @@ module.exports = [
     }
   },
   {
+    'code': 'timer',
+    'name': 'Управление спутниками',
+    'status': {
+      'hand': {
+        'title': '',
+        'type': 'status',
+      },
+    },
+    'commands': {
+      'hand/0': 'Отключить',
+      'hand/1': 'Включить',
+    },
+  },
+  {
     'code': '_',
     'name': 'Спутники',
-    'status':{
+    'status': {
       'start': {
         'title': 'Захваченно спутников',
         'type': 'text'
@@ -128,16 +140,16 @@ module.exports = [
     }
   },
   {
-    'code':'injectorBox',
-    'name':'Ящик с шприцом',
-    'commands':{
+    'code': 'injectorBox',
+    'name': 'Ящик с шприцом',
+    'commands': {
       'reset': 'Сброс',
       'finish': 'Завершить задание',
     },
-    'status':{
-      'error':{
-        'title':'Состояние',
-        'type':'list',
+    'status': {
+      'error': {
+        'title': 'Состояние',
+        'type': 'list',
         'list': {
           0: 'все выполнено',
           1: 'вставили флешку',
@@ -145,22 +157,22 @@ module.exports = [
           3: '-'
         }
       },
-      'progress':{
-        'title':'Шприц',
-        'type':'progress',
-        'min':0,
-        'max':10
+      'progress': {
+        'title': 'Шприц',
+        'type': 'progress',
+        'min': 0,
+        'max': 10
       },
       'finish': {
         'title': 'задача окончена',
         'type': 'status',
-        'on':['stop']
+        'on': ['stop']
       }
     }
   },
   {
-    'code':'air',
-    'name':'Питание. Шкаф венитиляции',
+    'code': 'air',
+    'name': 'Питание. Шкаф венитиляции',
     'status': {
       'pulse1': {
         'title': 'Замок',
@@ -177,13 +189,13 @@ module.exports = [
     }
   },
   {
-    'code':'air',
-    'name':'Система охлождения',
-    'commands':{
+    'code': 'air',
+    'name': 'Система охлождения',
+    'commands': {
       'reset': 'Сброс',
       'start': 'Начать задание',
     },
-    'status':{
+    'status': {
       'st': {
         'title': 'Состояние',
         'type': 'text'
@@ -191,13 +203,13 @@ module.exports = [
     }
   },
   {
-    'code':'doors',
-    'name':'Дверь к ИИ',
-    'commands':{
+    'code': 'doors',
+    'name': 'Дверь к ИИ',
+    'commands': {
       'open2': 'Открыть',
       'close2': 'Закрыть',
     },
-    'status':{
+    'status': {
       'door2': {
         'title': '',
         'type': 'status',

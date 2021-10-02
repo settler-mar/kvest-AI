@@ -84,7 +84,7 @@ module.exports.init = (app, config) => {
       resave: true,
       saveUninitialized: true,
       cookie: {
-        domain: "foo.bar.com",
+        domain: "AI",
         secure: false,
         httpOnly: true,
       },

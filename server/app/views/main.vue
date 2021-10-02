@@ -95,10 +95,6 @@
   export default {
     data: function () {
       return {
-        showCount: 20,
-        countLoaded: 20,
-        showPage: 1,
-        collection: [],
         time: '-',
         weight: '-',
         months: ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'],

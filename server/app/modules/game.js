@@ -11,6 +11,18 @@ global.game_control = {}
 
 let timerGame = null
 
+const timer = require("../../app/processor/timer.js")
+
+function timer_pause() {
+  console.log('timer_pause')
+  timer('/time/pause')
+}
+
+function timer_send() {
+  console.log('timer_send')
+  timer('/time/' + int_to_time(game.game_time - game.time))
+}
+
 module.exports = (config) => {
   fZero = (n)=> {
     if (n > 9) return n
@@ -34,10 +46,12 @@ module.exports = (config) => {
     game.status = 2;
     clearInterval(timerGame)
     update_game()
+    timer_pause()
   }
 
   game_control.addTime = ()=> {
     game.game_time += 60 * 5
+    timer_send()
   }
 
   game_control.start = ()=> {
@@ -66,10 +80,12 @@ module.exports = (config) => {
       esp_action.send('on1', 'air');
     }, 1000);
 
-    update_game()
+    update_game();
+    timer_send();
   };
 
   game_control.reset = ()=> {
+    timer_pause()
     game.status = 0;
     game.time = 0;
     esp_action.reset();
@@ -78,6 +94,7 @@ module.exports = (config) => {
   }
 
   game_control.stop = ()=> {
+    timer_pause()
     game.status = -1;
     clearInterval(timerGame);
     update_game()

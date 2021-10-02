@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="7ac97f2e-773b-4200-a9f0-2e284ddab0dd" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/media.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test_v.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../t/.idea/t.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../t/node_modules/clone/clone.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../Air/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../Air/src/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../device/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../device/src/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../device/src/nextioon.h" beforeDir="false" afterPath="$PROJECT_DIR$/../device/src/nextioon.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../doors/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../doors/src/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../esp-ws-uart/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../esp-ws-uart/src/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../logo/src/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../logo/src/main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../logo/src/main_old.cpp" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/app/modules/game.js" beforeDir="false" afterPath="$PROJECT_DIR$/../server/app/modules/game.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/app/processor/hackDevice.js" beforeDir="false" afterPath="$PROJECT_DIR$/../server/app/processor/hackDevice.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/app/processor/hackDevice_disconnect.js" beforeDir="false" afterPath="$PROJECT_DIR$/../server/app/processor/hackDevice_disconnect.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/app/routes/esp.js" beforeDir="false" afterPath="$PROJECT_DIR$/../server/app/routes/esp.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/app/views/components/el_status.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../server/app/views/components/el_status.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/app/views/main.vue" beforeDir="false" afterPath="$PROJECT_DIR$/../server/app/views/main.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/esp_list.js" beforeDir="false" afterPath="$PROJECT_DIR$/../server/esp_list.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/source/scss/el.scss" beforeDir="false" afterPath="$PROJECT_DIR$/../server/source/scss/el.scss" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../server/source/scss/index.scss" beforeDir="false" afterPath="$PROJECT_DIR$/../server/source/scss/index.scss" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="ProjectId" id="1xV4wXPQoRQZ3ff46o8Y2OzpBJD" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="7ac97f2e-773b-4200-a9f0-2e284ddab0dd" name="Changes" comment="" />
+      <created>1630427160930</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1630427160930</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+</project>

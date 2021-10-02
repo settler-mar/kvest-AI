@@ -54,7 +54,7 @@ void get() {
             if (currentLine.indexOf("GET /getName") >= 0) {
               Serial.println("name");
               client.println("ok");
-              client.stop();
+              client.flush();
               return;
             }
             else {
@@ -68,7 +68,8 @@ void get() {
               }
             }
           }
-          client.readString();
+          // client.readString();
+          break;      
         }
         else if (c != '\r') {  // if you got anything else but a carriage return character,
           currentLine += c;      // add it to the end of the currentLine
@@ -76,7 +77,7 @@ void get() {
       }
     }
     client.println("ok");
-    client.stop();
+    client.flush();
     //Serial.println("Client disconnected.");
     //Serial.println("");
   }
@@ -135,6 +136,9 @@ String clearName(String txt) {
     if (txt.charAt(i) == 0x3A) { // :
       out += txt.charAt(i);
     }
+    if (txt.charAt(i) == 0x5F) { // _
+      out += txt.charAt(i);
+    }
   }
   return out;
 }
@@ -156,12 +160,12 @@ void send(String url_ = "") {
   char url2[url_len];
   url.toCharArray(url2, url_len);
 
-  Serial.print("send: ");
-  Serial.print(url2);
-  Serial.print(" | ");
-  Serial.print(url_);
-  Serial.print(" | ");
-  Serial.println(url_len);
+  // Serial.print("send: ");
+  // Serial.print(url2);
+  // Serial.print(" | ");
+  // Serial.print(url_);
+  // Serial.print(" | ");
+  // Serial.println(url_len);
   // for (byte i = 0; i < url_len;i++) {
   //   Serial.print(i);
   //   Serial.print(": ");
@@ -180,7 +184,7 @@ void send(String url_ = "") {
     client.sendHeader("X-COMMAND", url_2);
     client.sendHeader("test", url_len);
     client.sendHeader("ZA", url2);
-    Serial.println(url_len);
+    // Serial.println(url_len);
   }
 #endif
   client.endRequest();

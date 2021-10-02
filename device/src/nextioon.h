@@ -21,3 +21,8 @@ void myNex_writeStr(String command, String txt){
     Serial.print("\xFF\xFF\xFF");
   }
 }
+
+void myNex_command(String command){
+    Serial.print(command);
+    Serial.print("\xFF\xFF\xFF");
+} 

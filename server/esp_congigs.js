@@ -24,4 +24,9 @@ module.exports = [
     'name': 'Система охлождения',
     'processor': require("./app/processor/air.js"),
   },
+  {
+    'code': 'timer',
+    'name': 'Таймер',
+    'send': require("./app/processor/timer.js")
+  }
 ];

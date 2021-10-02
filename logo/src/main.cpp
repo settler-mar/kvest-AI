@@ -48,8 +48,9 @@ int buttonCoolDownDelay = 500; // treshhold for increment to togggle sensor stat
 
 const int codeLength = 4; // must be <= maxCapacitiveSensors
 
+// 9 5 0 7 4 2
 //numbers on snake
-const int nums[maxCapacitiveSensors] = { 1, 5, 0, 7, 4, 2 };
+const int nums[maxCapacitiveSensors] = { 9, 5, 0, 7, 4, 2 };
 // code on snake
 const int codeNums[codeLength] = { 0, 2, 5, 7 };
 String enterCode = "";
@@ -64,6 +65,8 @@ int counter = 0;  // input code length counter
 String inData;
 
 void readSerial();
+void capacitiveSensorsInit();
+void setButtonColor(byte StickNum, uint32_t color);
 
 // Fill the dots one after the other with a color
 void colorWipe(uint32_t color, uint8_t wait = 0) {
@@ -87,7 +90,7 @@ void ledsOff(void) {
   colorWipe(leds.Color(0, 0, 0));
 }
 
-void resetGame() {
+void startGame() {
     // reset capacitiveSensors;
   capacitiveSensorsInit();
   delay(50);
@@ -95,6 +98,7 @@ void resetGame() {
   enterCode = "";
   lvl = 2;
   counter = 0;
+  Serial.println("start");
 }
 
 
@@ -107,8 +111,8 @@ void setCode() {
       if (enterCode.length() > codeLength) {
         enterCode = enterCode.substring(1);
       }
-      // Serial.print("input:");
-      // Serial.println(enterCode);
+      // UART_S.print("input:");
+      // UART_S.println(enterCode);
       if (codeNums[j] == nums[i])
         code[j] = i + 1;
     }
@@ -120,7 +124,7 @@ void capacitiveSensorsInit()
       // for 0x28 connect AD to 3V3
   if (!cap.begin(0x28)) {
   //  if (!cap.begin()) {
-    Serial.println("CAP1188 not found");
+    UART_S.println("CAP1188 not found");
     while (1);
   }
 
@@ -188,16 +192,71 @@ void startTest() {
   for (int i = 0;i < maxCapacitiveSensors;i++) {
     buttonPushed[i] = false;
   }
+  UART_S.println("finish_test");
+}
+
+void finishGame() {
+  lvl = 4;
+  timer = 0;
+}
+
+void readSerial() {
+  if (UART_S.available() > 0)
+  {
+    char recieved = UART_S.read();
+    if (recieved == '\n')
+    {
+      if (inData.startsWith("name")) {
+        UART_S.print("name:");
+        UART_S.println(NAME);
+      }
+      else if (inData.startsWith("start")) {
+        startGame();
+      }
+      else if (inData.startsWith("reset")) {
+        digitalWrite(LOGO_OPEN, HIGH);
+        lvl = 1;
+        timer = 0;
+        ledsOff();
+      }
+      else if (inData.startsWith("test")) {
+        startTest();
+      }
+      else if (inData.startsWith("finish")) {
+        finishGame();
+      }
+
+      inData = ""; // Clear recieved buffer
+    }
+    else {
+      inData += recieved;
+    }
+  }
 }
 
 // -------------------     S E T U P    -------------------------
+
+
+void ledInit() {
+  leds.begin();
+  leds.clear();
+  for (int i = 0; i < PIXEL_NUM; i++) { // For each pixel...
+    leds.setPixelColor(i, leds.Color(0, 150, 0));
+    leds.show();   // Send the updated pixel colors to the hardware.
+    delay(200); // Pause before next pass through loop
+  }
+  leds.clear();
+  leds.show();
+}
 
 void setup() {
   pinMode(LOGO_OPEN, OUTPUT);
   digitalWrite(LOGO_OPEN, HIGH);
 
-  Serial.begin(9600);
+  UART_S.begin(9600);
   UART_S.println("load");
+
+  ledInit();
 
   setCode();
 
@@ -207,12 +266,11 @@ void setup() {
   timer = 0;
   delay(startupDelay);
 
-  startTest();
   UART_S.println("init");
   /*
   for (int j=0; j<codeLength; j++)
-    Serial.print(String(code[j]));
-  Serial.println();
+    UART_S.print(String(code[j]));
+    UART_S.println();
   */
 }
 
@@ -242,10 +300,10 @@ void checkGameResult(void) {
   // check code
   if (arrayCompare(input, code)) {
     lvl = 3;
-    Serial.println("finish");
+    UART_S.println("finish");
   }
   else {
-    resetGame();
+    startGame();
   }
 
   // reset pushed state
@@ -284,27 +342,29 @@ void checkSensors(void) {
       if (buttonPushed[i] == false) {
         buttonPushed[i] = true; // set flag
         input[counter++] = i + 1;
-        /*
-        Serial.print("c_"); Serial.print(i+1); Serial.print("\t");
-        for(int j; j<4; j++){
-          Serial.print(input[j]);
-          Serial.print(" ");
-        }
-        Serial.println();
-        */
+
+        // UART_S.print("c_"); Serial.print(i + 1); Serial.print("\t");
+        // for (int j; j < 4; j++) {
+        //   UART_S.print(input[j]);
+        //   UART_S.print(" ");
+        // }
+        // UART_S.println();
+
       // Moderately bright blue color.
         setButtonColor(i, leds.Color(0, 0, 200));
         delay(buttonCoolDownDelay);
+
+        UART_S.print("input:");
+        for (byte j = 0;j < counter;j++) {
+          UART_S.print(nums[input[j] - 1]);
+        }
+        UART_S.println();
+
         break;
       }
     }
   }
   checkGameResult();
-}
-
-void finishGame(){
-  lvl = 4;
-  timer = 0;
 }
 
 void doneGame() {
