@@ -12,7 +12,9 @@ from time import sleep
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import re
 import requests
+
 detector = HandDetector(detectionCon=0.8)
+
 
 def vector_len(a, b):
     return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
@@ -156,6 +158,7 @@ class Camera:
             ProgressBar((236 + x, 162 + y)),
         ]
         self.cap = cap
+        self.cap_type = [isinstance(s, str) for s in cap]
         self.channel = 0
 
         threading.Thread(target=self.update).start()
@@ -172,7 +175,17 @@ class Camera:
     def update(self):
         last_active_channel = self.channel
         while 1:
-            self.success, self.camImg_pr = self.cap[self.channel].read()
+            if self.cap_type[self.channel]:
+                try:
+                    resp = requests.get(self.cap[self.channel], stream=True).raw
+                    image = np.asarray(bytearray(resp.read()), dtype="uint8")
+                    self.camImg_pr = cv2.imdecode(image, cv2.IMREAD_COLOR)
+                    self.success = True
+                except:
+                    self.success = True
+            else:
+                self.success, self.camImg_pr = self.cap[self.channel].read()
+
             if not self.success:
                 print('NOT VIDEO')
                 self.channel += 1
