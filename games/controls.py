@@ -12,6 +12,7 @@ from time import sleep
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import re
 import requests
+import socket
 
 detector = HandDetector(detectionCon=0.8)
 
@@ -177,12 +178,20 @@ class Camera:
         while 1:
             if self.cap_type[self.channel]:
                 try:
-                    resp = requests.get(self.cap[self.channel], stream=True).raw
+                    res = requests.get(self.cap[self.channel], stream=True, verify=False, timeout=3)
+                    resp = res.raw
                     image = np.asarray(bytearray(resp.read()), dtype="uint8")
                     self.camImg_pr = cv2.imdecode(image, cv2.IMREAD_COLOR)
                     self.success = True
+                except requests.exceptions.ConnectionError:
+                    print('build http connection failed')
+                    self.success = False
+                except socket.timeout:
+                    self.success = False
+                    print('download failed')
                 except:
-                    self.success = True
+                    self.success = False
+                    print('Other error')
             else:
                 self.success, self.camImg_pr = self.cap[self.channel].read()
 
