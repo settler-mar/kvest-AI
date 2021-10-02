@@ -24,9 +24,10 @@ from controls import *
 def init_cam(c):
     if len(c) < 3:
         return cv2.VideoCapture(int(c))
-    url = f"http://{c}/Streaming/Channels/102/picture?snapShotImageType=JPEG"
-    return url
-    # return cv2.VideoCapture(url)
+    # url = f"http://{c}/Streaming/Channels/102/picture?snapShotImageType=JPEG"
+    # return url
+    url = f"rtsp://{c}/Streaming/Channels/102"
+    return cv2.VideoCapture(url, cv2.CAP_FFMPEG)
     # cap = cv2.VideoCapture(0)
     # cap.set(3, W)
     # cam = cv2.VideoCapture("rtsp://admin:59Intelligence59@192.168.1.23:554/Streaming/Channels/102", cv2.CAP_FFMPEG)
@@ -37,7 +38,7 @@ f = open("cams.txt", "r")
 cams = []
 i = 0
 for conf in f.read().split("\n"):
-    cams.append(Camera((174, 350 + 380 * i), [init_cam(c) for c in conf.split(" ")]), )
+    cams.append(Camera((174, 350 + 380 * i), [init_cam(c) for c in conf.split(" ")], i % 2))
     i = i + 1
 
 H = 780

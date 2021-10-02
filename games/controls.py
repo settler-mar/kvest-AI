@@ -143,8 +143,9 @@ class Camera:
     active_hand: bool = False
     posCtrl: int = 0
     isDown: bool = False
+    flip: bool = False
 
-    def __init__(self, position, cap):  # (170, 350)
+    def __init__(self, position, cap, flip=False):  # (170, 350)
         x, y = position
         self.position = position
         self.texts = [
@@ -161,6 +162,7 @@ class Camera:
         self.cap = cap
         self.cap_type = [isinstance(s, str) for s in cap]
         self.channel = 0
+        self.flip = flip
 
         threading.Thread(target=self.update).start()
 
@@ -207,7 +209,8 @@ class Camera:
                 continue
 
             last_active_channel = self.channel
-            self.camImg_pr = cv2.flip(self.camImg_pr, 1)
+            if self.flip:
+                self.camImg_pr = cv2.flip(self.camImg_pr, 1)
 
             if self.active_hand:
                 self.processed_hand()
