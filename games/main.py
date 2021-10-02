@@ -24,7 +24,7 @@ from controls import *
 def init_cam(c):
     if len(c) < 3:
         return cv2.VideoCapture(int(c))
-    return cv2.VideoCapture(f"rtsp://{c}/Streaming/Channels/102", cv2.CAP_FFMPEG)
+    return cv2.VideoCapture(f"rtsp://{c}/Streaming/Channels/102/picture?snapShotImageType=JPEG")
     # cap = cv2.VideoCapture(0)
     # cap.set(3, W)
     # cam = cv2.VideoCapture("rtsp://admin:59Intelligence59@192.168.1.23:554/Streaming/Channels/102", cv2.CAP_FFMPEG)
