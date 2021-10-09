@@ -3,7 +3,8 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "start": "nodemon --inspect=127.0.0.1:9230 app/index.js"
+        "start": "nodemon --inspect=127.0.0.1:9230 app/index.js",
+        "run": "node app/index.js"
     },
     "dependencies": {
         "body-parser": "^1.18.2",

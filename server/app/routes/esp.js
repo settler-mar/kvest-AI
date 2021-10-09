@@ -16,7 +16,14 @@ let esp_callback = {};
 var esp_param = ['has_lang', 'processor', 'onDisconnect', 'send'];
 
 fs.readFile(ip_file, (err, data) => {
-  let ip_list = err ? {} : JSON.parse(data)
+  let ip_list = {}
+  try {
+    let ip_list = err ? {} : JSON.parse(data)
+  }
+  finally
+  {
+    ip_list = ip_list || {}
+  }
   esp_congigs.forEach(el => {
       esp_name[el.code] = ip_list[el.code] ? {ip: ip_list[el.code]} : {};
       for (let param_name of esp_param) {
