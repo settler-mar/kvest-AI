@@ -144,6 +144,7 @@ class Camera:
     posCtrl: int = 0
     isDown: bool = False
     flip: bool = False
+    up_ctrl = 0
 
     def __init__(self, position, cap, flip=False):  # (170, 350)
         x, y = position
@@ -224,31 +225,45 @@ class Camera:
 
         isDown = False
         if len(lmList) != 0:
-            b = vector_len(lmList[0], lmList[5])
-            e = vector_len(lmList[3], lmList[5])
-            c2 = e / b
-            isDown = c2 < .38
+            if lmList[9][1] == lmList[0][1]:
+                ctrl = self.posCtrl
+                isDown = self.isDown
+            else:
+                b = vector_len(lmList[0], lmList[5])
+                e = vector_len(lmList[3], lmList[5])
+                c2 = e / b
+                isDown = c2 < .38
 
-            angle = degrees(atan((lmList[9][0] - lmList[0][0]) / (lmList[9][1] - lmList[0][1])))
-            ctrl = 1 if angle < -13 else -1 if angle > 13 else 0
+                angle = degrees(atan((lmList[9][0] - lmList[0][0]) / (lmList[9][1] - lmList[0][1])))
+                ctrl = 1 if angle < -13 else -1 if angle > 13 else 0
+                
+                #cv2.addText(camImg, str(int(angle)) + " " + str(ctrl), (10, 50), 'Roboto-Regular.ttf',
+                #            color=(255, 0, 0, 1) if isDown else (0, 255, 0, 1), pointSize=20)
 
-            cv2.addText(camImg, str(int(angle)) + " " + str(ctrl), (10, 50), 'Roboto-Regular.ttf',
-                        color=(255, 0, 0, 1) if isDown else (0, 255, 0, 1), pointSize=20)
-
-            for i, point in enumerate(lmList):
-                cv2.circle(camImg, point, radius=3, color=(0, 0, 255) if isDown else (0, 255, 255), thickness=2)
-                # cv2.addText(self.camImg, str(i), point, 'Roboto-Regular.ttf', color=(0, 255, 0, 1))
+                for i, point in enumerate(lmList):
+                    cv2.circle(camImg, point, radius=3, color=(0, 0, 255) if isDown else (0, 255, 255), thickness=2)
+                    # cv2.addText(self.camImg, str(i), point, 'Roboto-Regular.ttf', color=(0, 255, 0, 1))
         else:
             ctrl = 0
+            print(datetime.now().isoformat(),'lost')
 
+        if ctrl == 0:
+           if self.up_ctrl < 3: 
+             self.up_ctrl += 1
+             ctrl = self.posCtrl
+        else:
+           self.up_ctrl=0
+           
         if ctrl != self.posCtrl:
             if ctrl == 0:
-                self.upKey()
+                print(datetime.now().isoformat(),'up')
+                #self.upKey()
             else:
+                self.upKey()
                 key = self.keyName(ctrl, isDown)
-                print('press', key)
+                print(datetime.now().isoformat(),'press', key)
                 pyautogui.keyDown(key)
-                pyautogui.press(key)
+                #pyautogui.press(key)
 
             self.posCtrl = ctrl
             self.isDown = isDown
@@ -259,7 +274,7 @@ class Camera:
         if down is None:
             down = self.isDown
         i = (1 if ctrl < 0 else 0) + (2 if down else 0)
-        return ['left', 'right', 'up', 'down'][i]
+        return [ 'right','left', 'down','up' ][i]
 
     def upKey(self):
         print('up', self.keyName())
