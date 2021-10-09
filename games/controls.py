@@ -236,8 +236,8 @@ class Camera:
 
                 angle = degrees(atan((lmList[9][0] - lmList[0][0]) / (lmList[9][1] - lmList[0][1])))
                 ctrl = 1 if angle < -13 else -1 if angle > 13 else 0
-                
-                #cv2.addText(camImg, str(int(angle)) + " " + str(ctrl), (10, 50), 'Roboto-Regular.ttf',
+
+                # cv2.addText(camImg, str(int(angle)) + " " + str(ctrl), (10, 50), 'Roboto-Regular.ttf',
                 #            color=(255, 0, 0, 1) if isDown else (0, 255, 0, 1), pointSize=20)
 
                 for i, point in enumerate(lmList):
@@ -245,25 +245,25 @@ class Camera:
                     # cv2.addText(self.camImg, str(i), point, 'Roboto-Regular.ttf', color=(0, 255, 0, 1))
         else:
             ctrl = 0
-            print(datetime.now().isoformat(),'lost')
+            print(datetime.now().isoformat(), 'lost')
 
         if ctrl == 0:
-           if self.up_ctrl < 3: 
-             self.up_ctrl += 1
-             ctrl = self.posCtrl
+            if self.up_ctrl < 3:
+                self.up_ctrl += 1
+                ctrl = self.posCtrl
         else:
-           self.up_ctrl=0
-           
+            self.up_ctrl = 0
+
         if ctrl != self.posCtrl:
             if ctrl == 0:
-                print(datetime.now().isoformat(),'up')
-                #self.upKey()
-            else:
+                print(datetime.now().isoformat(), 'up')
                 self.upKey()
+            else:
+                # self.upKey()
                 key = self.keyName(ctrl, isDown)
-                print(datetime.now().isoformat(),'press', key)
+                print(datetime.now().isoformat(), 'press', key)
                 pyautogui.keyDown(key)
-                #pyautogui.press(key)
+                # pyautogui.press(key)
 
             self.posCtrl = ctrl
             self.isDown = isDown
@@ -274,7 +274,7 @@ class Camera:
         if down is None:
             down = self.isDown
         i = (1 if ctrl < 0 else 0) + (2 if down else 0)
-        return [ 'right','left', 'down','up' ][i]
+        return ['right', 'left', 'down', 'up'][i]
 
     def upKey(self):
         print('up', self.keyName())

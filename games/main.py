@@ -56,11 +56,13 @@ txt_msg = Text((270, 1550), text="Копирование файлов\nна уд
 
 cams[1].channel = 1
 cams[1].handControl(True)
-def main():
-    screen_id = 0
 
-    # get the size of the screen
-    screen = screeninfo.get_monitors()[screen_id]
+
+def main():
+    screen_id = 4
+    screen_cnt = len(screeninfo.get_monitors())
+
+    screen = screeninfo.get_monitors()[min(screen_cnt - 1, screen_id)]
     width = int(screen.width / 2)
     # image_r = read_transparent_png("timer_bg.png")
     image_r = cv2.imread("timer_bg.png")
