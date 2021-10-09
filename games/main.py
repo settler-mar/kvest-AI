@@ -47,6 +47,12 @@ W = 1240
 timer = Timer((538, 1620), text="", fontFile='CodenameCoderFree4F-Bold.ttf', fontSize=200, color=(255, 0, 0),
               align=1)
 timer.setTime("60:00")
+txt_wrong = Text((538, 115), text="ОБНАРУЖЕНО\nВТОРЖЕНИЕ", fontFile='Batman_Forever_Alternate_Cyr.ttf',
+                 fontSize=100,
+                 color=(255, 0, 0), align=1)
+
+txt_msg = Text((270, 1550), text="Копирование файлов\nна удаленный сервер", fontFile='Bicubik.ttf',
+               fontSize=30, color=(255, 255, 255), align=0, line_height=1.5)
 
 
 def main():
@@ -72,12 +78,6 @@ def main():
 
     # cams[1].handControl(True)
     circles = Circles((30, 1038))
-    txt_wrong = Text((538, 115), text="ОБНАРУЖЕНО\nВТОРЖЕНИЕ", fontFile='Batman_Forever_Alternate_Cyr.ttf',
-                     fontSize=100,
-                     color=(255, 0, 0), align=1)
-
-    txt = Text((270, 1550), text="Копирование файлов\nна удаленный сервер", fontFile='Bicubik.ttf',
-               fontSize=30, color=(255, 255, 255), align=0, line_height=1.5)
     while 1:
         im = Image.open("timer_bg.png")
         draw = ImageDraw.Draw(im)
@@ -86,7 +86,7 @@ def main():
             cam.renderText(draw)
         txt_wrong.render(draw)
         timer.render(draw)
-        txt.render(draw)
+        txt_msg.render(draw)
 
         image = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
 
@@ -135,6 +135,25 @@ class MyServer(BaseHTTPRequestHandler):
             txt = re.search("[0-9][0-9]:[0-9][0-9]", path[1])
             if txt:
                 timer.setTime(txt.string)
+
+        if path[0] == 'lang':
+            tr = {
+                'ru': [
+                    'ОБНАРУЖЕНО\nВТОРЖЕНИЕ',
+                    'Копирование файлов\nна удаленный сервер'
+                ], 'ua': [
+                    'ВИЯВЛЕНО\nВТОРГНЕННЯ',
+                    'Копіювання файлів\nна віддалений сервер'
+                ], 'en': [
+                    'DETECTED\nINVASION',
+                    'Copying files\nfor remote server'
+                ],
+            }.get(path[1])
+            if not tr:
+                return
+
+            txt_wrong.text = tr[0]
+            txt_msg.text = tr[1]
 
 
 def server():

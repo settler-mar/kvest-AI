@@ -27,6 +27,7 @@ module.exports = [
   {
     'code': 'timer',
     'name': 'Таймер',
+    'has_lang': true,
     'send': require("./app/processor/timer.js")
   }
 ];
