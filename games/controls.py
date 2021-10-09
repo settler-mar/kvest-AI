@@ -234,6 +234,11 @@ class Camera:
                     int(max(lmList)[0] * 1.1)
                 ]
                 c = (self.hand_board[0] + self.hand_board[1]) / 2
+                self.hand_board = [
+                    int(c- w / 7),
+                    int(c+ w / 7)
+                ]
+                print(self.hand_board)
                 if abs(w / 2 - c) > w / 3:
                     return
 
@@ -248,13 +253,13 @@ class Camera:
                 b = vector_len(lmList[0], lmList[5])
                 e = vector_len(lmList[3], lmList[5])
                 c2 = e / b
-                isDown = c2 < .38
+                isDown = c2 < .35
 
                 hand_pos = [
-                    int(min(lmList)[0] * 0.9),
-                    int(max(lmList)[0] * 1.1)
+                    int(min(lmList)[0]),
+                    int(max(lmList)[0])
                 ]
-                ctrl = 1 if self.hand_board[0] < hand_pos[0] else -1 if self.hand_board[0] > hand_pos[0] else 0
+                ctrl = -1 if self.hand_board[0] > hand_pos[0] else 1 if self.hand_board[1] < hand_pos[1] else 0
 
                 # angle = degrees(atan((lmList[9][0] - lmList[0][0]) / (lmList[9][1] - lmList[0][1])))
                 # ctrl = 1 if angle < -13 else -1 if angle > 13 else 0
