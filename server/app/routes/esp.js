@@ -18,10 +18,9 @@ var esp_param = ['has_lang', 'processor', 'onDisconnect', 'send'];
 fs.readFile(ip_file, (err, data) => {
   let ip_list = {}
   try {
-    let ip_list = err ? {} : JSON.parse(data)
+    ip_list = err ? {} : JSON.parse(data)
   }
-  finally
-  {
+  catch (e) {
     ip_list = ip_list || {}
   }
   esp_congigs.forEach(el => {
