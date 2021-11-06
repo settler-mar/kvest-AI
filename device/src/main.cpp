@@ -9,6 +9,7 @@
 #include <ArduinoHttpClient.h>
 
 #include <nextioon.h>
+// #define debug_game 1
 
 #define client_finish client.stop();
 #define SEND_BY_X_COMMAND
@@ -26,11 +27,18 @@ String inData;
 #define  timeoutTime 3000
 
 String name = "hackDevice";
-boolean start_game = false; //Обовленно ли имя
-
 byte lg = 0;
-bool has_lang = false;
-byte game = 3;
+
+#ifdef debug_game
+  boolean start_game = true; //Обовленно ли имя
+  bool has_lang = true;
+  byte game = debug_game;
+#else
+  boolean start_game = false; //Обовленно ли имя
+  bool has_lang = false;
+  byte game = 0;
+#endif
+
 // Current time
 unsigned long currentTime = millis();
 // Previous time
@@ -51,7 +59,7 @@ void updateLg();
 
 void updateLg() { // отправить на дисплей язык
   if (not start_game) return;
-  Serial.print("\xFF\xFF\xFF");
+  myNextion_cr();
   if (game == 1) {
     myNex_writeNum("air.pic", lg);
     myNex_writeNum("air.air.pic", lg);
@@ -239,7 +247,7 @@ void setup() {
   Serial.println();
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
-  Serial.print("\xFF\xFF\xFF");
+  myNextion_cr();
 
   server.begin();
 }
@@ -271,6 +279,9 @@ void loop() {
       send("game");
       previousTime = millis() + 5000;
     }
+  }
+  if (game == 1) {
+    checkResultAir();
   }
   // Serial.println(4);
   delay(10);

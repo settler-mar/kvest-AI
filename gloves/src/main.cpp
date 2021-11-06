@@ -8,16 +8,16 @@ byte devId;
 
 uint8_t outPin[] = { 12, 13,A0,A1 };
 bool pin_state[] = { false, false };
-#define out_cnt 2
+#define out_cnt 4
 
-#define btnCnt 1
+#define btnCnt 8
 uint8_t btnPin[] = { 2,3,4,5,6,7,8,9 };
 boolean btnState[btnCnt];
 unsigned long btnUndr[btnCnt]; // андребизг для отправки сообщений
 unsigned long btnTimout = 0;
 byte prevBtn = 255;
 #define send_timeout 2000
-#define Undr_time 100
+#define Undr_time 50
 
 void setPins(byte pin, boolean stat) {
   pin_state[pin] = stat;

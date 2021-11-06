@@ -4,7 +4,7 @@ byte air_timer = 20;
 unsigned long air_pr_time = 0;
 
 void updateAir(String st) {
-  air_pos_st = st;
+  air_pos_st = st.substring(0, 4);
   for (byte n = 0;n < 4;n++) {
     String s = st.substring(n, n + 1);
     air_pos[n] = s == "0" ? 0 : s == "2" ? 2 : 1;
@@ -17,7 +17,7 @@ void updateAir(String st) {
 void sendAir() {
   if (not start_game) return;
   byte airDors[] = { 0,1,2,3,2,3,0,1 };
-  Serial.print("\xFF\xFF\xFF");
+  myNextion_cr();
   for (byte i = 2;i < 8;i++) {
     myNex_writeNum("p" + String(i) + ".pic", 3 + 3 * i + air_pos[airDors[i]]);
   }
@@ -25,17 +25,19 @@ void sendAir() {
 
 void checkResultAir() {
   if (not start_game) return;
+  if (air_timer >= 100) return;
   if (air_pos_st != "2020") {
     air_pr_time = 0;
     return;
   }
   if (air_pr_time == 0) {
-    air_pr_time == millis() + 1000;
+    air_pr_time = millis() + 1000;
+    return;
   }
-  else if (air_pr_time < millis()) {
+  if (air_pr_time < millis()) {
     air_pr_time = 0;
-    air_timer += 2;
-
+    air_timer += 5;
+    myNex_writeNum("n0.val", air_timer);
     if (air_timer == 90) {
       myNex_command("vis p0,1");
       myNex_writeNum("p0.pic", 3 + lg);
@@ -60,7 +62,6 @@ bool getAir(String currentLine) {
     updateAir(currentLine.substring(j + 9, j + 14));
     sendAir();
     updateLg();
-    checkResultAir();
     return true;
   }
   return false;

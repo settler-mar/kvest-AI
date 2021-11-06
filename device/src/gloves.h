@@ -13,7 +13,7 @@ void gloves_clear() {
   // myNex_writeNum("gloves.pic", 69 + lg);
   myNex_writeNum("p11.pic", 78 + lg);
   myNex_command("vis p11,1");
-  myNex_writeNum("n0.val", -6);
+  myNex_writeNum("n0.val", -3);
   gloves_active = -1;
 }
 
