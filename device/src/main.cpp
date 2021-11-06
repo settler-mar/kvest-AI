@@ -16,10 +16,6 @@
 ESP8266WiFiMulti WiFiMulti;
 
 String inData;
-// #define host "192.168.0.225"
-// #define httpPort 12345
-// #define SSID "Settler-test"
-// #define WIFI_PASS "12346579"
 #define host "192.168.0.100"
 #define httpPort 8080
 #define SSID "ai"
@@ -34,56 +30,24 @@ boolean start_game = false; //Обовленно ли имя
 
 byte lg = 0;
 bool has_lang = false;
-byte game = 1;
+byte game = 3;
 // Current time
 unsigned long currentTime = millis();
 // Previous time
 unsigned long previousTime = 500;
 unsigned long previousTime2 = 500;
+unsigned long serial_t = millis();
 
 WiFiServer server(80);
 
 void send(String);
+void updateLg();
 
-// ввод кода
-byte keys_map[] = { 0,1,2,3,4,5,6,7,8,9 }; // клавиатура. каждый раз перемешивается
-byte keys_code[] = { 0,0,0,0 }; // верная комбинация
-byte keys_code_read[] = { 0,0,0,0 }; // полученная комбинация
-byte key_pos = 0; // текущий символ
-byte pass_valid = 1;
+//игры
+#include "air.h"
+#include "codes.h"
+#include "gloves.h"
 
-//EasyNex myNex(Serial); // Create an object of EasyNex class with the name < myNex >
-
-void updateCode() {
-  key_pos = 0;
-  pass_valid = 1;
-  myNex_writeNum("n5.val", 9);//запуск таймера
-  for (byte j = 0;j < 5;j++) {
-    byte i = j + random(10 - j);
-    byte c = keys_map[i];
-    keys_map[i] = keys_map[j];
-    keys_map[j] = c;
-  }
-  String out = "code_r:";
-  for (byte j = 0;j < 5;j++) {
-    keys_code[j] = keys_map[j];
-    out += String(keys_map[j]);
-    myNex_writeStr("t" + String(j) + ".txt", String(keys_map[j]));//передаем код
-    myNex_writeNum("t" + String(j) + ".pco", 0);                  //сброс цвета
-  }
-  send(out);
-
-  for (byte j = 0;j < 10;j++) {
-    byte i = j + random(10 - j);
-    byte c = keys_map[i];
-    keys_map[i] = keys_map[j];
-    keys_map[j] = c;
-  }
-
-  for (byte j = 0;j < 10;j++) {
-    myNex_writeStr("b" + String(j) + ".txt", String(keys_map[j]));//передаем клавиши
-  }
-}
 
 void updateLg() { // отправить на дисплей язык
   if (not start_game) return;
@@ -94,51 +58,38 @@ void updateLg() { // отправить на дисплей язык
   }
 }
 
-byte air_pos[4];
-String air_pos_st = "";
-byte air_timer = 20;
-unsigned long air_pr_time = 0
-void updateAir(String st) {
-  air_pos_st = st;
-  for (byte n = 0;n < 4;n++) {
-    String s = st.substring(n, n + 1);
-    air_pos[n] = s == "0" ? 0 : s == "2" ? 2 : 1;
-
-    // Serial.print(n);
-    // Serial.print(" ");
-    // Serial.println(air_pos[n]); 
-  }
-}
-void sendAir() {
-  if (not start_game) return;
-  byte airDors[] = { 0,1,2,3,2,3,0,1 };
-  Serial.print("\xFF\xFF\xFF");
-  for (byte i = 2;i < 8;i++) {
-    myNex_writeNum("p" + String(i) + ".pic", 3 + 3 * i + air_pos[airDors[i]]);
-  }
-}
-
-void checkResultAir() {
-  if (not start_game) return;
-  if (air_pos_st != "2020") {
-    air_pr_time = 0;
-    return;
-  }
-  if (air_pr_time == 0) {
-    air_pr_time == millis() + 1000;
-  }
-  else if (air_pr_time < millis()) {
-    air_pr_time = 0;
-    air_timer += 2;
-
-    if (air_timer == 90) {
-      myNex_command("vis p0,1");
-      myNex_writeNum("p0.pic", 3 + lg);
-    }else   if (air_timer >= 90) {
-      myNex_writeNum("p0.pic", 5 + lg);
-      send("finish_1");
+bool test_get_lang(String currentLine) {
+  int j = currentLine.indexOf("GET /lang/");
+  if (j >= 0) {
+    String lang = currentLine.substring(j + 10, j + 12);
+    if (lang == "en") {
+      lg = 0;
+      has_lang = true;
+      updateLg();
     }
+    else if (lang == "ru") {
+      lg = 1;
+      has_lang = true;
+      updateLg();
+    }
+    else if (lang == "ua") {
+      lg = 2;
+      has_lang = true;
+      updateLg();
+    }
+    return true;
   }
+  return false;
+}
+
+bool test_get_game(String currentLine) {
+  int j = currentLine.indexOf("GET /game/");
+  if (j >= 0) {
+    game = currentLine.substring(j + 10, j + 11).toInt();
+    myNex_writeNum("n0.val", game);
+    return true;
+  }
+  return false;
 }
 
 void get() {
@@ -150,78 +101,28 @@ void get() {
     previousTime = currentTime;
     while (client.connected() && currentTime - previousTime <= timeoutTime) { // loop while the client's connected
       currentTime = millis();
-      // Serial.println("while start."); 
       if (client.available()) {             // if there's bytes to read from the client,
         currentLine = client.readStringUntil('\n');
-        //char c = client.read();             // read a byte, then
-        //if (c == '\n') {                    // if the byte is a newline character
-          // Serial.println(currentLine);
         if (currentLine.length() > 0 and currentLine.indexOf("GET") >= 0) {
-          int j = currentLine.indexOf("GET /lang/");
-          if (j >= 0) {
-            String lang = currentLine.substring(j + 10, j + 12);
-            // Serial.println();
-            // Serial.println(lang);
-            if (lang == "en") {
-              client.println("ok");
-              lg = 0;
-              has_lang = true;
-              updateLg();
-            }
-            else if (lang == "ru") {
-              client.println("ok");
-              lg = 1;
-              has_lang = true;
-              updateLg();
-            }
-            else if (lang == "ua") {
-              lg = 2;
-              client.println("ok");
-              has_lang = true;
-              updateLg();
-            }
-            else {
-              client.println("err");
-            }
-            client_finish
-              return;
-          }
-          j = currentLine.indexOf("GET /air:");
-          if (j >= 0) {
-            // Serial.println();
-            // Serial.println(currentLine.substring(j+9,j+14));
-            updateAir(currentLine.substring(j + 9, j + 14));
-            sendAir();
-            updateLg();
-            checkResultAir();
+          if (test_get_lang(currentLine) ||
+            (not start_game && test_get_game(currentLine)) ||
+            ((game == 1) && getAir(currentLine)) ||
+            ((game == 3) && getGloves(currentLine))
+            ) {
             client.flush();
             client.println("ok");
             client_finish
               return;
           }
-          /*else{
-            int st = currentLine.indexOf("GET /")+5;
-            int en = currentLine.indexOf(" ", st+1);
-            if(en>0){
-              Serial.println(currentLine.substring(st,en));
-            }else{
-              Serial.println(currentLine.substring(st));
-            }
-          }*/
-          //client.println(myNex.currentPageId);
+          client.println("wr");
           client_finish
             return;
         }
-      //} else if (c != '\r') {  // if you got anything else but a carriage return character,
-      //  currentLine += c;      // add it to the end of the currentLine
-      //}
       }
     }
     client.flush();
     client.println("ok");
     client_finish
-    //Serial.println("Client disconnected.");
-    //Serial.println("");
   }
 }
 
@@ -282,47 +183,29 @@ void send(String url_ = "") {
   client.endRequest();
 }
 
+void processed_serial() {
+  if (inData.length() > 2) {
+    if (game == 1 && inData.charAt(0) == 0x23) serialAir(inData);
+    if (game == 2 && inData.charAt(0) == 0x02) serialCodes(inData);
+    if (game == 3 && inData.charAt(0) == 0x03) serialGloves(inData);
+  }
+  inData = ""; // Clear recieved buffer
+  serial_t = 0;
+}
+
 void readSerial() {
   while (Serial.available() > 0)
   {
+    serial_t = millis();
     char recieved = Serial.read();
     if (recieved == '\n')
     {
-      if (game == 1) {
-        if (inData.charAt(0) == 0x23 && inData.charAt(1) == 0x02 && inData.charAt(2) == 0x52) {
-          start_game = true;
-          sendAir();
-        }
-        // updateLg();
-      }
-      if (game == 2 and inData.charAt(0) == 0x02) {
-        if (inData.charAt(1) == 0x01 && inData.charAt(2) == 0x00) {
-          updateCode();
-        }
-        if (inData.charAt(1) == 0x00 && key_pos < 5) {
-          keys_code_read[key_pos] = keys_map[inData.charAt(2)];
-          // myNex_command("vis b"+String(int(inData.charAt(2)))+",0");
-          myNex_writeNum("t" + String(key_pos) + ".pco", (keys_code_read[key_pos] == keys_code[key_pos]) ? 2016 : 63488);
-          if (keys_code_read[key_pos] != keys_code[key_pos])pass_valid = 0;
-          key_pos++;
-          String out = "code_p:";
-          for (byte j = 0;j < key_pos;j++) {
-            out += String(keys_code_read[j]);
-          }
-          send(out);
-          if (key_pos == 5 && pass_valid) {
-            myNex_command("tm0.en=0");
-            myNex_command("vis p0,1");
-            send("finish_2");
-          }
-        }
-      }
-      inData = ""; // Clear recieved buffer
+      processed_serial();
     }
     else {
       if (recieved == 0xff) {
         byte l = inData.length();
-        if (inData.charAt(l - 1) == 0xff && inData.charAt(l - 2) == 0xff) {
+        if (l > 3 && inData.charAt(l - 1) == 0xff && inData.charAt(l - 2) == 0xff) {
           inData = "";
           return;
         }
@@ -330,10 +213,15 @@ void readSerial() {
       inData += recieved;
     }
   }
+  if (serial_t && serial_t + 150 < millis()) {
+    processed_serial();
+  }
 }
 
 void setup() {
   Serial.begin(9600);
+  Serial.println();
+  Serial.println("start");
 
   /*SPIFFS.begin();
   delay(600);
@@ -342,14 +230,16 @@ void setup() {
   SPIFFS.setConfig(cfg);*/
 
   WiFi.setSleepMode(WIFI_NONE_SLEEP);
-  WiFiMulti.addAP(SSID, WIFI_PASS);
+  WiFi.begin(SSID, WIFI_PASS);
 
-  while (WiFiMulti.run() != WL_CONNECTED) {
-    delay(100);
+  while (WiFi.status() != WL_CONNECTED) {
+    Serial.print(".");
+    delay(500);
   }
   Serial.println();
   Serial.println("IP address: ");
   Serial.println(WiFi.localIP());
+  Serial.print("\xFF\xFF\xFF");
 
   server.begin();
 }
@@ -359,7 +249,6 @@ void loop() {
   if (not start_game) {
     if (previousTime2 < millis()) {
       previousTime2 = millis() + 1000;
-      myNex_writeNum("n0.val", game);
     }
     //myNex.currentPageId
   }

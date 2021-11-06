@@ -69,7 +69,7 @@ void get() {
             }
           }
           // client.readString();
-          break;      
+          break;
         }
         else if (c != '\r') {  // if you got anything else but a carriage return character,
           currentLine += c;      // add it to the end of the currentLine
@@ -265,12 +265,12 @@ void setup() {
   Serial.println();
   Serial.println();
 
-  WiFiMulti.addAP(SSID, WIFI_PASS);
+  WiFi.begin(SSID, WIFI_PASS);
 
   Serial.print("[SETUP] SSID: ");Serial.println(SSID);
 
   Serial.print("[SETUP] WIFI connect");
-  while (WiFiMulti.run() != WL_CONNECTED) {
+  while (WiFi.status() != WL_CONNECTED) {
     Serial.print(".");
     delay(100);
   }

@@ -158,6 +158,8 @@ module.exports = (router, config) => {
       // } else
       if (command[0] == 'lang') {
         sendEsp('/lang/' + game.lang, code)
+      } else if (command[0] == 'game') {
+        sendEsp('/game/' + game.device_game, code)
       } else if (command[0] == 'reset_game') {
         game_control.stop()
         game_control.reset()

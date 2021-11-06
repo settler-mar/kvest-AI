@@ -27,6 +27,7 @@
         <select v-model="game.device_game" v-on:change="setGame">
           <option value="1">Вентиляция</option>
           <option value="2">Взлом двери</option>
+          <option value="3">Перчатки</option>
         </select>
       </div>
       <span>{{time}}</span>
@@ -73,6 +74,7 @@
               <el_text v-if="st.type=='text'" :params="st" :data="get_status(item.code,code)"/>
               <el_progress v-else-if="st.type=='progress'" :params="st" :data="get_status(item.code,code)"/>
               <el_status v-else-if="st.type=='status'" :params="st" :data="get_status(item.code,code)"/>
+              <el_gloves v-else-if="st.type=='gloves'" :params="st" :data="get_status(item.code,code)"/>
 
             </td>
           </tr>
@@ -91,6 +93,7 @@
   import el_progress from './components/el_progress.vue'
   import el_status from './components/el_status.vue'
   import el_text from './components/el_text.vue'
+  import el_gloves from './components/el_gloves.vue'
 
   export default {
     data: function () {
@@ -103,7 +106,7 @@
       }
     },
     components: {
-      el_list, el_progress, el_status, el_text
+      el_list, el_progress, el_status, el_text, el_gloves
     },
     methods: {
       evStart(e){

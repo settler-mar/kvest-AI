@@ -140,6 +140,27 @@ module.exports = [
     }
   },
   {
+    'code': 'hackDevice',
+    'commands': {
+      // 'reset': 'Сброс',
+      // 'start': 'Начать задание',
+    },
+    'status': {
+      'code_s': {
+        'title': 'Код',
+        'type': 'gloves'
+      },
+      'code_g': {
+        'title': 'Введенный',
+        'type': 'gloves'
+      },
+      'finish_3': {
+        'title': 'задача окончена',
+        'type': 'status'
+      }
+    }
+  },
+  {
     'code': 'injectorBox',
     'name': 'Ящик с шприцом',
     'commands': {

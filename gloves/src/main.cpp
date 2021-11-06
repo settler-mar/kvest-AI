@@ -6,12 +6,12 @@
 String inData;
 byte devId;
 
-uint8_t outPin[] = { 7, 6 };
+uint8_t outPin[] = { 12, 13,A0,A1 };
 bool pin_state[] = { false, false };
 #define out_cnt 2
 
 #define btnCnt 1
-uint8_t btnPin[] = { 2 };
+uint8_t btnPin[] = { 2,3,4,5,6,7,8,9 };
 boolean btnState[btnCnt];
 unsigned long btnUndr[btnCnt]; // андребизг для отправки сообщений
 unsigned long btnTimout = 0;
@@ -39,6 +39,7 @@ void  checkInput() {
         if (prevBtn != i or millis() > btnTimout) {
           prevBtn = i;
           Serial.print("btn:");
+          Serial.print(devId);
           Serial.println(i);
         }
         btnTimout = millis() + send_timeout;
