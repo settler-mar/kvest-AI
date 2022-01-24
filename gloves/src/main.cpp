@@ -1,12 +1,17 @@
 #include <Arduino.h>
+#include <EEPROM.h>
+
 
 #define UART_S Serial
-#define pinID 10 // пин определяющий ID
 #define NAME "gloves"
 String inData;
-byte devId;
+#define devId EEPROM.read(0)
 
-uint8_t outPin[] = { 12, 13,A0,A1 };
+#define fbPin 13
+unsigned long dg_timer = 0;
+#define dg_timout 50
+
+uint8_t outPin[] = { A0, 11, 12 };
 bool pin_state[] = { false, false };
 #define out_cnt 4
 
@@ -41,6 +46,8 @@ void  checkInput() {
           Serial.print("btn:");
           Serial.print(devId);
           Serial.println(i);
+          digitalWrite(fbPin, HIGH);
+          dg_timer = millis() + dg_timout;
         }
         btnTimout = millis() + send_timeout;
       }
@@ -59,21 +66,24 @@ void reset() {
 void setup() {
   UART_S.begin(9600);
   UART_S.println("load");
-  pinMode(pinID, INPUT);
+  delay(300);
+  Serial.print("dev id ");
+  Serial.println(devId);
+
   for (byte i = 0; i < out_cnt; i++)
   {
     pinMode(outPin[i], OUTPUT);
   }
+  pinMode(fbPin, OUTPUT);
+  digitalWrite(fbPin, LOW);
   for (byte i = 0;i < btnCnt;i++) {
     pinMode(btnPin[i], INPUT);
     btnState[i] = false;
     btnUndr[i] = 0;
   }
-  delay(300);
-  devId = digitalRead(pinID) ? 1 : 0;
-
   reset();
-  UART_S.println("init");
+  UART_S.print("init: ");
+  UART_S.println(devId);
 }
 
 void readSerial() {
@@ -115,6 +125,11 @@ void readSerial() {
         int num = inData.substring(2).toInt();
         setPins(num, !pin_state[num]);
       }
+      else if (inData.startsWith("dev_id")) {
+        EEPROM.write(0, inData.substring(6).toInt());
+        Serial.print("Set dev id: ");
+        Serial.println(EEPROM.read(0));
+      }
 
       inData = ""; // Clear recieved buffer
     }
@@ -127,5 +142,12 @@ void readSerial() {
 void loop() {
   readSerial();
   checkInput();
-  delay(10);
+  if (dg_timer and (dg_timer < millis())) {
+    // Serial.print(dg_timer);
+    // Serial.print(" ");
+    // Serial.println(millis());
+    digitalWrite(fbPin, LOW);
+    dg_timer = 0;
+  }
+  delay(1);
 }

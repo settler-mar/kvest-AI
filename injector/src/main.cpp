@@ -42,7 +42,7 @@ void uppdatePalette(){
 }
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   while (!Serial)
   delay(500);
 

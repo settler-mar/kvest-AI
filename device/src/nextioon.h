@@ -1,4 +1,4 @@
-#ifndef debug_game
+#ifdef debug_game
 void myNex_writeNum(String compName, uint32_t val) {
   Serial.print(compName);
   Serial.print("=");

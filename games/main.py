@@ -3,7 +3,6 @@
 Created on Thu Jun 22 16:44:27 2017
 @author: sakurai
 """
-
 import numpy as np
 import cv2
 import screeninfo
@@ -54,8 +53,8 @@ txt_wrong = Text((538, 115), text="ОБНАРУЖЕНО\nВТОРЖЕНИЕ", fo
 txt_msg = Text((270, 1550), text="Копирование файлов\nна удаленный сервер", fontFile='Bicubik.ttf',
                fontSize=30, color=(255, 255, 255), align=0, line_height=1.5)
 
-cams[1].channel = 1
-cams[1].handControl(True)
+cams[0].channel = 0
+cams[0].handControl(True)
 
 
 def main():
