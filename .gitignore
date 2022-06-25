@@ -74,5 +74,4 @@ arduino_ide
 *.zip
 
 t
-media
 /server/yarn.lock
