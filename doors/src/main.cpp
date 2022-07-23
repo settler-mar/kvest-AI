@@ -89,7 +89,7 @@ boolean dState[] = { true,true,true };// doors state
 unsigned long timer[] = { 0,0,0 };
 boolean door_moved = false;
 
-byte is_run = 0; // запущенна ли игра
+byte is_run = 0; // запущенна ли игра 0-запущенно
 // -------------------     F U N C T I O N S    -------------------------
 
 void setPins(byte pin, boolean stat) {
@@ -214,6 +214,11 @@ void doorProcessed() {
           is_run -= 1;
           if (is_run == 0) {
             Serial.println("start_game");
+          }else{
+            for (byte i = 0; i < 3; i++)
+            {
+              moveMotor(i, false); // close doors
+            }
           }
         }
         timer[i] = 0;
@@ -247,13 +252,13 @@ void startMotors() {
 void reset() {
   for (byte i = 0; i < 3; i++)
   {
-    moveMotor(i, false); // close doors
+    moveMotor(i, true); // open doors
   }
   for (byte i = 0; i < out_cnt; i++)
   {
     setPins(i, false);
   }
-  is_run = 1;
+  is_run = 2;
 }
 
 // -------------------     S E T U P    -------------------------
