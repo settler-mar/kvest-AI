@@ -162,6 +162,8 @@ module.exports = (router, config) => {
         game_control.reset()
       } else if (command[0] === 'start_game') {
         game_control.start()
+      } else if (command[0] === 'prestart_game') {
+        esp_action.start();
       } else {
         if (!esp_status[code]) {
           esp_status[code] = {}

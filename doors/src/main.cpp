@@ -185,6 +185,7 @@ void  checkInput() {
         if (i == 2) {
           moveMotor(1, !dState[1]);
           moveMotor(2, dState[1]);
+          Serial.println("prestart_game");
         }
       }
       btnState[i] = st;
