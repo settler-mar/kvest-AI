@@ -10,6 +10,11 @@ module.exports = [
   {
     'code': 'doors',
     'name': 'Входная дверь',
+    'onStatus': {
+      'door0': {
+        '1': ['media', '1:doors:ch0'] // можно указать [['media','3'],['media','4']]. Если несколько команд то указываем их через ;
+      }
+    }
   },
   {
     'code': 'logo',

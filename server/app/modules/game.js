@@ -55,12 +55,12 @@ module.exports = (config) => {
   }
 
   game_control.start = ()=> {
-    if (game.status = 0) {
+    if (game.status === 0) {
       game.time = 0;
       esp_action.reset();
     }
 
-    if (game.time == 0) {
+    if (game.time === 0) {
       esp_action.start();
     }
     game.status = 1;

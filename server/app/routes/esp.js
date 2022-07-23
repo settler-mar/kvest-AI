@@ -13,14 +13,13 @@ global.esp_status = {};
 let esp_callback = {};
 
 
-var esp_param = ['has_lang', 'processor', 'onDisconnect', 'send'];
+var esp_param = ['has_lang', 'processor', 'onDisconnect', 'send', 'onStatus'];
 
 fs.readFile(ip_file, (err, data) => {
   let ip_list = {}
   try {
     ip_list = err ? {} : JSON.parse(data)
-  }
-  catch (e) {
+  } catch (e) {
     ip_list = ip_list || {}
   }
   esp_congigs.forEach(el => {
@@ -78,8 +77,8 @@ const reset_timer = function (code, ip) {
   wss_send('esp_list', JSON.stringify(esp_name))
 }
 
-const sendEsp = (path, code, test_property)=> {
-  const send = (path, code, test_property)=> {
+const sendEsp = (path, code, test_property) => {
+  const send = (path, code, test_property) => {
     // console.log('>', code, path)
     if (!!esp_name[code]) {
       if (test_property && !esp_name[code][test_property]) {
@@ -109,20 +108,20 @@ const sendEsp = (path, code, test_property)=> {
 
 esp_action.send = sendEsp;
 
-esp_action.reset = ()=> {
+esp_action.reset = () => {
   console.log('esp reset');
   esp_status = {};
   wss_send('status', JSON.stringify(esp_status));
   sendEsp('/reset')
 }
 
-esp_action.start = ()=> {
+esp_action.start = () => {
   console.log('esp start');
   sendEsp('/start')
 }
 
-esp_action.do = (code, event)=> {
-  console.log('esp do', event);
+esp_action.do = (code, event) => {
+  console.log('esp do [', code, ']', event);
   sendEsp('/' + event, code)
 }
 esp_action.lang = (lang) => {
@@ -142,7 +141,6 @@ module.exports = (router, config) => {
 
       command = command.split(':');
       console.log(colors.green(code), colors.yellow(ip), command);
-
       if (!esp_name.hasOwnProperty(code)) {
         res.send('err');
         return
@@ -155,21 +153,35 @@ module.exports = (router, config) => {
       // if (command[0] == 'start') {
       //   esp_status[code] = {}
       // } else
-      if (command[0] == 'lang') {
+      if (command[0] === 'lang') {
         sendEsp('/lang/' + game.lang, code)
-      } else if (command[0] == 'game') {
+      } else if (command[0] === 'game') {
         sendEsp('/game/' + game.device_game, code)
-      } else if (command[0] == 'reset_game') {
+      } else if (command[0] === 'reset_game') {
         game_control.stop()
         game_control.reset()
-      }
-      else if (command[0] == 'start_game') {
+      } else if (command[0] === 'start_game') {
         game_control.start()
       } else {
         if (!esp_status[code]) {
           esp_status[code] = {}
         }
         esp_status[code][command[0]] = command[1] || true;
+      }
+
+      if (esp_name[code]['onStatus']
+        && esp_name[code]['onStatus'][command[0]]
+        && esp_name[code]['onStatus'][command[0]][command[1]]) {
+        var cmd = esp_name[code]['onStatus'][command[0]][command[1]]
+        if (typeof cmd[0] === 'string') {
+          cmd = [cmd]
+        }
+        for (let cm of cmd) {
+          if (esp_name[cm[0]]) {
+            sendEsp(...cm.reverse())
+          }
+          wss_send(...cm)
+        }
       }
 
       if (esp_name[code]['processor']) {

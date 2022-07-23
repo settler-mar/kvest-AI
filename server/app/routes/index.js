@@ -5,20 +5,20 @@ module.exports = (router, config) => {
     (req, res) => {
       var d = new Date();
       const data = {
-        title: config.appName||"Квест <<Искусственный интеллект>>",
+        title: config.appName || "Квест <<Искусственный интеллект>>",
         year: d.getFullYear(),
         month: d.getMonth(),
         esp_list: esp_name,
         game_list: esp_list,
         game: game,
-        status:esp_status,
+        status: esp_status,
       };
       let meta = {
         head: {
-          title: config.name||'Test',
+          title: config.name || 'Test',
           metas: [
-            { property:'og:title', content: config.name||'Test'},
-            { name:'twitter:title', content: config.name||'Test'},
+            {property: 'og:title', content: config.name || 'Test'},
+            {name: 'twitter:title', content: config.name || 'Test'},
           ],
         }
       };
@@ -26,4 +26,8 @@ module.exports = (router, config) => {
       res.renderVue("main.vue", data, meta);
     },
   );
+  // router.get("/game", (req, res) => {
+  //
+  //   res.renderVue("main.vue", data, meta);
+  // })
 };

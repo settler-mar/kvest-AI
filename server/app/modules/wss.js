@@ -6,6 +6,12 @@ module.exports.init = (server, config) => {
   const wss_web = new WebSocket.Server({server});
 
   global.wss_send = function (part, message) {
+    if (part === 'media') {
+      message = message.split(':')
+      // message[0] = '/media/' + game.lang + '/' + message[0] + '.mp4'
+      message[0] = '/media/' + message[0] + '.mp4'
+      message = message.join(':')
+    }
     let msg = part + ":" + message;
     for (let i = 0; i < WS_clients.length; i++) {
       WS_clients[i].send(msg);
@@ -16,7 +22,7 @@ module.exports.init = (server, config) => {
     WS_clients.push(client);
     console.log('new client web', WS_clients.length);
     client.on('message', message => {
-      console.log("Web command: ",message)
+      console.log("Web command: ", message)
 
       game_control.processed(message)
     });

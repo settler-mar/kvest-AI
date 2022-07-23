@@ -19,13 +19,13 @@ function ws_start() {
     };
     ws.onmessage = function () {
     };
-    ws.terminate()
+    if (ws.terminate) ws.terminate()
     console.log('kill ws')
   }
 
   ws = new WebSocket(base_url.replace('http', 'ws'))
   clearInterval(ws_timer);
-  ws_timer=setInterval(ws_start,2000);
+  ws_timer = setInterval(ws_start, 2000);
 
   ws.onopen = function () {
     console.log('WebSocket Connect');
@@ -35,49 +35,57 @@ function ws_start() {
   ws.onerror = function (error) {
     console.log('WebSocket Error ', error);
     ws_error++
-    if (ws_error > 600)ws_error = 600
+    if (ws_error > 600) ws_error = 600
     clearInterval(ws_timer);
-    ws_timer=setInterval(ws_start,1000+ws_error*100);
+    ws_timer = setInterval(ws_start, 1000 + ws_error * 100);
   };
 
   ws.onclose = function () {
     console.log('WebSocket connection closed');
     ws_error++
-    if (ws_error > 600)ws_error = 600
+    if (ws_error > 600) ws_error = 600
     clearInterval(ws_timer);
-    ws_timer=setInterval(ws_start,1000+ws_error*100);
+    ws_timer = setInterval(ws_start, 1000 + ws_error * 100);
   };
 
   ws.onmessage = function (e) {
-    data = e.data.split(':')
-    key = data.shift()
+    var data = e.data.split(':')
+    var key = data.shift()
     data = data.join(':')
+    console.log(key, data)
+    if (typeof (app) !== 'undefined') {
+      if (key === 'time') {
+        app.time = data
+        return
+      }
 
+      console.log(key, data)
 
-    if (key == 'time') {
-      app.time = data
-      return
+      if (key === 'esp_list') {
+        app.esp_list = JSON.parse(data)
+        return
+      }
+
+      if (key === 'game') {
+        app.game = JSON.parse(data)
+        return
+      }
+
+      if (key === 'game_time') {
+        app.game_time = data
+        return
+      }
+      if (key === 'status') {
+        app.status = JSON.parse(data)
+        return
+      }
     }
 
-    console.log(key,data)
-
-    if (key == 'esp_list') {
-      app.esp_list = JSON.parse(data)
-      return
-    }
-
-    if (key == 'game') {
-      app.game = JSON.parse(data)
-      return
-    }
-
-    if (key == 'game_time') {
-      app.game_time = data
-      return
-    }
-    if (key == 'status') {
-      app.status = JSON.parse(data)
-      return
+    if (key === 'media') {
+      data = data.split(':')
+      var file = data.shift()
+      data = data.join(':')
+      playMedia(file, data)
     }
   }
 }
