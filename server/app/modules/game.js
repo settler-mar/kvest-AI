@@ -24,7 +24,7 @@ function timer_send() {
 }
 
 module.exports = (config) => {
-  fZero = (n)=> {
+  fZero = (n) => {
     if (n > 9) return n
     return '0' + n
   }
@@ -35,29 +35,30 @@ module.exports = (config) => {
     return fZero(m) + ":" + fZero(s)
   }
 
-  update_game = ()=> {
+  update_game = () => {
     game.timer = int_to_time(game.game_time - game.time)
     game.timer += " / " + int_to_time(game.game_time)
 
     wss_send('game', JSON.stringify(game))
   }
 
-  game_control.pause = ()=> {
+  game_control.pause = () => {
     game.status = 2;
     clearInterval(timerGame)
     update_game()
     timer_pause()
   }
 
-  game_control.addTime = ()=> {
+  game_control.addTime = () => {
     game.game_time += 60 * 5
     timer_send()
   }
 
-  game_control.start = ()=> {
-    if (game.status === 0) {
+  game_control.start = () => {
+    if (game.status !== 0) {
       game.time = 0;
       esp_action.reset();
+      console.log('reset on start')
     }
 
     if (game.time === 0) {
@@ -68,23 +69,25 @@ module.exports = (config) => {
     game.game_time = 60 * 60;
 
     clearInterval(timerGame);
-    timerGame = setInterval(()=> {
+    timerGame = setInterval(() => {
       game.time++;
       update_game()
     }, 1000)
 
     //изменяем статус устройств
-    setTimeout(()=> {
+    setTimeout(() => {
       // включаем порты для хакерского устройства
       esp_action.send('on0', 'air');
       esp_action.send('on1', 'air');
     }, 1000);
 
+    esp_action.wss_send('media','1:doors:ch0')
+
     update_game();
     timer_send();
   };
 
-  game_control.reset = ()=> {
+  game_control.reset = () => {
     timer_pause()
     game.status = 0;
     game.time = 0;
@@ -93,14 +96,14 @@ module.exports = (config) => {
     update_game()
   }
 
-  game_control.stop = ()=> {
+  game_control.stop = () => {
     timer_pause()
     game.status = -1;
     clearInterval(timerGame);
     update_game()
   }
 
-  game_control.lang = (value)=> {
+  game_control.lang = (value) => {
     if (['ru', 'ua', 'en'].indexOf(value) < 0) {
       return
     }
@@ -108,12 +111,12 @@ module.exports = (config) => {
     esp_action.lang(value)
     update_game()
   }
-  game_control.game = (value)=> {
+  game_control.game = (value) => {
     game.device_game = value;
     update_game()
   }
 
-  game_control.processed = (message)=> {
+  game_control.processed = (message) => {
     if (message in game_control) {
       game_control[message]()
       return

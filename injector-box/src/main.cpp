@@ -263,6 +263,7 @@ void start_state() { // Установить начатьное состояни
     leds[i] = 0;
   }
   LEDS.show();
+  move(true);
 }
 
 void reset() {
@@ -321,6 +322,9 @@ void readSerial() {
       }
       else if (inData.startsWith("reset")) {
         reset();
+      }
+      else if (inData.startsWith("start")) {
+        move(false);
       }
       else if (inData.startsWith("finish")) {
         finish();
