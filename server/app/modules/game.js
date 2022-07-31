@@ -81,7 +81,7 @@ module.exports = (config) => {
       esp_action.send('on1', 'air');
     }, 1000);
 
-    esp_action.wss_send('media','1:doors:ch0')
+    wss_send('media','1:doors:ch0')
 
     update_game();
     timer_send();
