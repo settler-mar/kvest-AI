@@ -140,7 +140,7 @@ esp_action.lang = (lang) => {
   sendEsp('/lang/' + lang, false, 'has_lang')
 }
 
-esp_action.inner = (code, command, ip = 'app') => {
+esp_action.inner = (code, command, ip) => {
   console.log(colors.green(code), colors.yellow(ip), command);
 
   if (!esp_name.hasOwnProperty(code)) {
@@ -170,8 +170,7 @@ esp_action.inner = (code, command, ip = 'app') => {
         }
       }
     }
-  }
-  // if (command[0] == 'start') {
+  }// if (command[0] == 'start') {
   //   esp_status[code] = {}
   // } else
   if (command[0] === 'lang') {
