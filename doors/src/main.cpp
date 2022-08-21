@@ -82,7 +82,7 @@ String inData;
 boolean btnState[] = { true,true,true };
 unsigned long btnUndr[] = { 0,0,0 }; // андребизг для отправки сообщений
 #define Undr_time 1000
-boolean dState[] = { false,false,false };// doors state 
+boolean dState[] = { false,false,false };// doors state
 
 
 
