@@ -100,7 +100,7 @@ const sendEsp = (path, code, test_property) => {
   if (code) {
     send(path, code, test_property)
   } else {
-    for (var code in esp_name) {
+    for (let code in esp_name) {
       send(path, code, test_property)
     }
   }
@@ -129,6 +129,83 @@ esp_action.lang = (lang) => {
   sendEsp('/lang/' + lang, false, 'has_lang')
 }
 
+esp_action.inner = (code, command, ip = 'app') => {
+  console.log(colors.green(code), colors.yellow(ip), command);
+
+  if (!esp_name.hasOwnProperty(code)) {
+    return false
+  }
+  reset_timer(code, ip);
+
+  if (command.length < 2) {
+    command[1] = 1
+  }
+  let do_start = false
+  for (let el of esp_list) {
+    if (!do_start) {
+      if (el['code'] === code) {
+        if (command[0] === ('finish_cmd' in el ? el['finish_cmd'] : 'finish')) {
+          do_start = true
+          continue
+        }
+      }
+    } else {
+      let start_cmd = 'start_cmd' in el ? el['start_cmd'] : 'start'
+      if (start_cmd in el['commands']) {
+        console.log('start next', el['code'])
+        sendEsp(start_cmd, el['code']);
+        if (!('skip_on_start' in el)) {
+          break
+        }
+      }
+    }
+  }
+  // if (command[0] == 'start') {
+  //   esp_status[code] = {}
+  // } else
+  if (command[0] === 'lang') {
+    sendEsp('/lang/' + game.lang, code)
+  } else if (command[0] === 'game') {
+    sendEsp('/game/' + game.device_game, code)
+  } else if (command[0] === 'reset_game') {
+    game_control.stop()
+    game_control.reset()
+  } else if (command[0] === 'start_game') {
+    game_control.start()
+  } else if (command[0] === 'prestart_game') {
+    esp_action.start();
+  } else {
+    if (!esp_status[code]) {
+      esp_status[code] = {}
+    }
+    esp_status[code][command[0]] = command[1] || true;
+  }
+
+  if (esp_name[code]['onStatus']
+    && esp_name[code]['onStatus'][command[0]]
+    && esp_name[code]['onStatus'][command[0]][command[1]]) {
+    var cmd = esp_name[code]['onStatus'][command[0]][command[1]]
+    if (typeof cmd[0] === 'string') {
+      cmd = [cmd]
+    }
+    for (let cm of cmd) {
+      if (esp_name[cm[0]]) {
+        sendEsp(...cm.reverse())
+      }
+      wss_send(...cm)
+    }
+  }
+  if (esp_name[code]['processor']) {
+    esp_name[code]['processor'](code, command)
+  }
+
+  if (esp_callback[code] && esp_callback[code][command[0]]) {
+    esp_callback[code][command[0]].forEach(cmd => {
+      game_control.processed(cmd)
+    })
+  }
+  wss_send('status', JSON.stringify(esp_status));
+}
 
 module.exports = (router, config) => {
   router.get("/esp/*", (req, res) => {
@@ -140,64 +217,12 @@ module.exports = (router, config) => {
       const ip = req.query['ip'] || req.params['ip'] || req.clientIp.split(':').pop();
 
       command = command.split(':');
-      console.log(colors.green(code), colors.yellow(ip), command);
-      if (!esp_name.hasOwnProperty(code)) {
-        res.send('err');
-        return
-      }
-      reset_timer(code, ip);
 
-      if (command.length < 2) {
-        command[1] = 1
-      }
-      // if (command[0] == 'start') {
-      //   esp_status[code] = {}
-      // } else
-      if (command[0] === 'lang') {
-        sendEsp('/lang/' + game.lang, code)
-      } else if (command[0] === 'game') {
-        sendEsp('/game/' + game.device_game, code)
-      } else if (command[0] === 'reset_game') {
-        game_control.stop()
-        game_control.reset()
-      } else if (command[0] === 'start_game') {
-        game_control.start()
-      } else if (command[0] === 'prestart_game') {
-        esp_action.start();
+      if (esp_action.inner(code, command, ip)) {
+        res.send('ok')
       } else {
-        if (!esp_status[code]) {
-          esp_status[code] = {}
-        }
-        esp_status[code][command[0]] = command[1] || true;
+        res.send('err');
       }
-
-      if (esp_name[code]['onStatus']
-        && esp_name[code]['onStatus'][command[0]]
-        && esp_name[code]['onStatus'][command[0]][command[1]]) {
-        var cmd = esp_name[code]['onStatus'][command[0]][command[1]]
-        if (typeof cmd[0] === 'string') {
-          cmd = [cmd]
-        }
-        for (let cm of cmd) {
-          if (esp_name[cm[0]]) {
-            sendEsp(...cm.reverse())
-          }
-          wss_send(...cm)
-        }
-      }
-
-      if (esp_name[code]['processor']) {
-        esp_name[code]['processor'](code, command)
-      }
-
-      if (esp_callback[code] && esp_callback[code][command[0]]) {
-        esp_callback[code][command[0]].forEach(cmd => {
-          game_control.processed(cmd)
-        })
-      }
-      wss_send('status', JSON.stringify(esp_status));
-
-      res.send('ok')
     },
   );
 };

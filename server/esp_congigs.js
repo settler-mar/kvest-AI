@@ -45,4 +45,10 @@ module.exports = [
     'name': 'Клавиатура дополнительная',
     'processor': require("./app/processor/send_to_hackDevice.js")
   },
+  {
+    'code': 'snake',
+    'name': 'Змейка',
+    'has_lang': true,
+    'send': require("./app/processor/snake.js")
+  }
 ];

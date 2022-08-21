@@ -79,10 +79,10 @@ String inData;
 // -------------------     V A R I A B L E S    -------------------------
 
 // btns state
-boolean btnState[] = { false,false,false };
+boolean btnState[] = { true,true,true };
 unsigned long btnUndr[] = { 0,0,0 }; // андребизг для отправки сообщений
 #define Undr_time 1000
-boolean dState[] = { true,true,true };// doors state 
+boolean dState[] = { false,false,false };// doors state 
 
 
 
@@ -140,10 +140,6 @@ boolean btnCheck(byte pin) {
   return false;
 }
 
-void startTest() {
-
-}
-
 void moveMotor(byte motor, boolean stat) {
   // Serial.print("Start move ");
   // Serial.print(motor);
@@ -185,7 +181,6 @@ void  checkInput() {
         if (i == 2) {
           moveMotor(1, !dState[1]);
           moveMotor(2, dState[1]);
-          Serial.println("prestart_game");
         }
       }
       btnState[i] = st;
@@ -219,6 +214,7 @@ void doorProcessed() {
             for (byte i = 0; i < 3; i++)
             {
               moveMotor(i, false); // close doors
+              Serial.println("prestart_game");
             }
           }
         }
@@ -267,10 +263,8 @@ void reset() {
 void setup() {
 
   IOinit();
-
   UART_S.begin(9600);
   UART_S.println("load");
-  startTest();
   reset();
   delay(moto_time_max);
   moveMotor(0, true); // open door0
