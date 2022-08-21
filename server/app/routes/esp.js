@@ -152,7 +152,7 @@ esp_action.inner = (code, command, ip = 'app') => {
     } else {
       let start_cmd = 'start_cmd' in el ? el['start_cmd'] : 'start'
       if (start_cmd in el['commands']) {
-        console.log('start next', el['code'])
+		  		  console.log('start next',el['code'])
         sendEsp(start_cmd, el['code']);
         if (!('skip_on_start' in el)) {
           break
