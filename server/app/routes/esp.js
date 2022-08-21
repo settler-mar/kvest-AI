@@ -100,7 +100,7 @@ const sendEsp = (path, code, test_property) => {
   if (code) {
     send(path, code, test_property)
   } else {
-    for (var code in esp_name) {
+    for (let code in esp_name) {
       send(path, code, test_property)
     }
   }
@@ -129,7 +129,7 @@ esp_action.lang = (lang) => {
   sendEsp('/lang/' + lang, false, 'has_lang')
 }
 
-esp_action.inner = (code, command, ip) => {
+esp_action.inner = (code, command, ip = 'app') => {
   console.log(colors.green(code), colors.yellow(ip), command);
 
   if (!esp_name.hasOwnProperty(code)) {
@@ -139,6 +139,26 @@ esp_action.inner = (code, command, ip) => {
 
   if (command.length < 2) {
     command[1] = 1
+  }
+  let do_start = false
+  for (let el of esp_list) {
+    if (!do_start) {
+      if (el['code'] === code) {
+        if (command[0] === ('finish_cmd' in el ? el['finish_cmd'] : 'finish')) {
+          do_start = true
+          continue
+        }
+      }
+    } else {
+      let start_cmd = 'start_cmd' in el ? el['start_cmd'] : 'start'
+      if (start_cmd in el['commands']) {
+        console.log('start next', el['code'])
+        sendEsp(start_cmd, el['code']);
+        if (!('skip_on_start' in el)) {
+          break
+        }
+      }
+    }
   }
   // if (command[0] == 'start') {
   //   esp_status[code] = {}

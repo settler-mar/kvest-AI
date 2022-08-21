@@ -46,7 +46,8 @@
 // -------------------        IO setup     -------------------------
 
 uint8_t btnPin[] = { A0,A1,A2 };
-#define LED A3
+#define LED1 A3
+#define LED2 4
 
 byte motorPin[][2] = { {13,12},{11,10},{8,9} }; // {close,open}
 #define M1_FW 13
@@ -119,7 +120,8 @@ void IOinit() {
     pinMode(btnPin[i], INPUT);
   }
 
-  pinMode(LED, OUTPUT);
+  pinMode(LED1, OUTPUT);
+  pinMode(LED2, OUTPUT);
   pinMode(M1_FW, OUTPUT);
   pinMode(M1_BW, OUTPUT);
   pinMode(M2_FW, OUTPUT);
@@ -138,6 +140,11 @@ boolean btnCheck(byte pin) {
     return true;
   }
   return false;
+}
+
+void led_state(){
+  digitalWrite(LED1, is_run?LOW:HIGH);
+  digitalWrite(LED2, is_run?HIGH:LOW);
 }
 
 void moveMotor(byte motor, boolean stat) {
@@ -186,10 +193,12 @@ void  checkInput() {
       btnState[i] = st;
     }
   }
-  if (led)
-    digitalWrite(LED, LOW);
-  else
-    digitalWrite(LED, HIGH);
+  if (led){
+    digitalWrite(LED1, LOW);
+    digitalWrite(LED2, LOW);
+  }else{
+    led_state();
+  }
 }
 
 void doorProcessed() {
@@ -209,6 +218,7 @@ void doorProcessed() {
         if (i == 0 && !dState[i] && is_run) {
           is_run -= 1;
           if (is_run == 0) {
+            led_state();
             Serial.println("start_game");
           }else{
             for (byte i = 0; i < 3; i++)
@@ -256,6 +266,7 @@ void reset() {
     setPins(i, false);
   }
   is_run = 2;
+  led_state();
 }
 
 // -------------------     S E T U P    -------------------------
