@@ -255,6 +255,40 @@ module.exports = [
     }
   },
   {
+    'code': 'snake',
+    'name': "Документация",
+    'status': {
+      'unbugged': {
+        'title': 'Доументация',
+        'type': 'status'
+      },
+      'manual_electricity': {
+        'title': 'Electricity Data',
+        'type': 'status'
+      },
+      'autonomy': {
+        'title': 'Autonomy AI power',
+        'type': 'status'
+      },
+      'project': {
+        'title': 'Project changes',
+        'type': 'status'
+      },
+      'safety': {
+        'title': 'Safety Instruction',
+        'type': 'status'
+      },
+      'operating': {
+        'title': 'Operating system upgrade',
+        'type': 'status'
+      },
+      'working': {
+        'title': 'Project failure protection',
+        'type': 'status'
+      }
+    }
+  },
+  {
     'code': 'hackDevice',
     'name': "Перчатки",
     'commands': {
