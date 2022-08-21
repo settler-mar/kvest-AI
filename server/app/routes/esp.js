@@ -140,7 +140,7 @@ esp_action.lang = (lang) => {
   sendEsp('/lang/' + lang, false, 'has_lang')
 }
 
-esp_action.inner = (code, command, ip) => {
+esp_action.inner = (code, command, ip = 'app') => {
   console.log(colors.green(code), colors.yellow(ip), command);
 
   if (!esp_name.hasOwnProperty(code)) {
@@ -163,14 +163,15 @@ esp_action.inner = (code, command, ip) => {
     } else {
       let start_cmd = 'start_cmd' in el ? el['start_cmd'] : 'start'
       if (start_cmd in el['commands']) {
-		  		  console.log('start next',el['code'])
+        console.log('start next', el['code'])
         sendEsp(start_cmd, el['code']);
         if (!('skip_on_start' in el)) {
           break
         }
       }
     }
-  }// if (command[0] == 'start') {
+  }
+  // if (command[0] == 'start') {
   //   esp_status[code] = {}
   // } else
   if (command[0] === 'lang') {

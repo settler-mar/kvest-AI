@@ -119,11 +119,10 @@ export default {
       months: ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'],
       loading: false,
       db: [],
-      displays: [
+    displays: [
         {'name': 'test', 'display': 0},
         {'name': 'test1', 'display': 1},
-      ]
-    }
+      ]}
   },
   components: {
     el_list, el_progress, el_status, el_text, el_gloves, el_select
@@ -133,8 +132,7 @@ export default {
       ws.send('start')
     },
     evReset(e) {
-      ws.send('reset')
-    },
+      ws.send('reset')},
     setDisplay(e) {
       ws.send('set_display')
     },
