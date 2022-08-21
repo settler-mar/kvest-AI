@@ -17,3 +17,5 @@ package-lock.json
 *.zip
 test*
 ip_list.data
+paths.js
+*.txt

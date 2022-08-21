@@ -29,13 +29,30 @@ module.exports = [
     }
   },
   {
-    'code': '_',
+    'code': 'snake',
     'name': 'Змейка',
     'status': {
-      'start': {
-        'title': 'Уровень',
+      'hard_level': {
+        'title': 'Сложность',
+        'type': 'select',
+        'list': [1, 2, 3]
+      },
+      'login': {
+        'title': 'Пароль',
+        'type': 'status'
+      },
+      'foods': {
+        'title': 'Еда',
         'type': 'text'
       },
+      'level': {
+        'title': 'Пройдено уровней',
+        'type': 'text'
+      },
+      'finish': {
+        'title': 'задача окончена',
+        'type': 'status'
+      }
     }
   },
   {
@@ -137,6 +154,40 @@ module.exports = [
         'title': 'Захваченно спутников',
         'type': 'text'
       },
+    }
+  },
+  {
+    'code': 'snake',
+    'name': "Документация",
+    'status': {
+      'unbugged': {
+        'title': 'Доументация',
+        'type': 'status'
+      },
+      'manual_electricity': {
+        'title': 'Electricity Data',
+        'type': 'status'
+      },
+      'autonomy': {
+        'title': 'Autonomy AI power',
+        'type': 'status'
+      },
+      'project': {
+        'title': 'Project changes',
+        'type': 'status'
+      },
+      'safety': {
+        'title': 'Safety Instruction',
+        'type': 'status'
+      },
+      'operating': {
+        'title': 'Operating system upgrade',
+        'type': 'status'
+      },
+      'working': {
+        'title': 'Project failure protection',
+        'type': 'status'
+      }
     }
   },
   {

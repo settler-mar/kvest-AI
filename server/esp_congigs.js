@@ -49,6 +49,6 @@ module.exports = [
     'code': 'snake',
     'name': 'Змейка',
     'has_lang': true,
-    'send': require("./app/processor/snake.js")
+    'send': require("./app/processor/snake.js"),
   }
 ];

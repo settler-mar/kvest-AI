@@ -139,7 +139,8 @@ void capacitiveSensorsInit()
   // sensitivity of the threshold and delta counts and data scaling of the base counts
   // default value 2Fh
   uint8_t reg = cap.readRegister(0x1f) & 0x0f;
-  cap.writeRegister(0x1f, reg | 0x5F); // 5F works fine
+  // cap.writeRegister(0x1f, reg | 0x5F); // 5F works fine
+  cap.writeRegister(0x1f, 0x3F); // 5F works fine
   //Decrease sensitivity a little - default is 0x2F (32x) per datasheet
   //( 0x3F);  // 16x sensitivity
   //( 0x4F);  // 8x  sensitivity
