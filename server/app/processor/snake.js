@@ -1,9 +1,9 @@
 const exec = require('child_process').execFile;
-
+const colors = require('colors');
 const fs = require('fs')
 const base_path = require('../../paths.js')['snake']
 let hard_level = 2
-
+//chrome --window-position=0,0 --start-fullscreen http://127.0.0.1:8080/game.html
 
 function get_number(str) {
   str = str.match(/(\d+)/)
@@ -21,23 +21,22 @@ const run_game = () => {
   update_file()
   fs.writeFile(base_path + 'GamePhase.txt', 'Start', {flag: 'w'}, err => {
   })
-  try {
-    fs.unlinkSync(base_path + 'SnakeOUT.txt')
-  } catch (err) {
-    console.error(err)
-  }
+  fs.writeFile(base_path + 'SnakeOUT.txt', 'init\n', {flag: 'w'}, err => {
+  })
   if (fs.existsSync(base_path + 'Snake2022.exe')) {
     exec(base_path + 'Snake2022.exe', {'cwd': base_path})
   }
 }
 
 fs.watchFile(base_path + 'SnakeOUT.txt', function (event, filename) {
-  console.log('SnakeOUT.txt change');
+	
+  console.log(colors.blue('SnakeOUT.txt change'));
   fs.readFile(base_path + 'SnakeOUT.txt', 'utf8', (err, data) => {
     if (err) {
       console.error(err);
       return;
     }
+	console.log(data.split('\n'));
     let result = {'level': 0}
     for (let line of data.split('\n')) {
       if (line.indexOf('Electricity Data read') !== -1) result['manual_electricity'] = 1
@@ -65,7 +64,6 @@ fs.watchFile(base_path + 'SnakeOUT.txt', function (event, filename) {
         esp_action.inner('snake', [key, result[key]])
       }
     }
-    console.log(data.split('\n'));
   });
 });
 

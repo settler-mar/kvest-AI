@@ -109,23 +109,23 @@ const sendEsp = (path, code, test_property) => {
 esp_action.send = sendEsp;
 
 esp_action.reset = () => {
-  console.log('esp reset');
+  console.log(colors.cyan('esp reset'));
   esp_status = {};
   wss_send('status', JSON.stringify(esp_status));
   sendEsp('/reset')
 }
 
 esp_action.start = () => {
-  console.log('esp start');
+  console.log(colors.cyan('esp start'));
   sendEsp('/start')
 }
 
 esp_action.do = (code, event) => {
-  console.log('esp do [', code, ']', event);
+  console.log(colors.cyan('esp do '), code, '>', event);
   sendEsp('/' + event, code)
 }
 esp_action.lang = (lang) => {
-  console.log('esp lang', lang);
+  console.log(colors.cyan('esp lang'), lang);
   sendEsp('/lang/' + lang, false, 'has_lang')
 }
 
@@ -150,9 +150,9 @@ esp_action.inner = (code, command, ip = 'app') => {
         }
       }
     } else {
-      let start_cmd = 'start_cmd' in el ? el['start_cmd'] : 'start'
+      let start_cmd = 'start_cmd' in el ? el['start_cmd'] : 'run'
       if (start_cmd in el['commands']) {
-        console.log('start next', el['code'])
+        console.log(colors.cyan('run next'), el['code'])
         sendEsp(start_cmd, el['code']);
         if (!('skip_on_start' in el)) {
           break

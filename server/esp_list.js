@@ -60,7 +60,7 @@ module.exports = [
     'name': 'Лого',
     'commands': {
       'reset': 'Сброс',
-      'start': 'Запуск',
+      'run': 'Запуск',
       'finish': 'Завершить',
     },
     'status': {
