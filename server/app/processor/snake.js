@@ -27,7 +27,7 @@ const run_game = () => {
   })
   fs.writeFile(base_path + 'SnakeOUT.txt', 'init\n', {flag: 'w'}, err => {
   })
-  if (fs.existsSync(base_path + 'Snake2022.exe')) {
+  if (fs.existsSync(base_path + 'Snake.exe')) {
     exec(base_path + 'Snake2022.exe', {'cwd': base_path})
   }
 }
