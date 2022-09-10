@@ -130,7 +130,6 @@ void IOinit() {
   pinMode(M3_BW, OUTPUT);
   pinMode(outPin[0], OUTPUT);
   pinMode(outPin[1], OUTPUT);
-
   IOinitialOFF();
 }
 
@@ -143,8 +142,10 @@ boolean btnCheck(byte pin) {
 }
 
 void led_state(){
-  digitalWrite(LED1, is_run?LOW:HIGH);
-  digitalWrite(LED2, is_run?HIGH:LOW);
+  Serial.print("set led: ");
+  Serial.println(is_run);
+  digitalWrite(LED1, is_run<=1?LOW:HIGH);
+  digitalWrite(LED2, is_run>=1?LOW:HIGH);
 }
 
 void moveMotor(byte motor, boolean stat) {
@@ -175,7 +176,7 @@ void  checkInput() {
   byte led = false;
   for (byte i = 0;i < 3;i++) {
     byte st = digitalRead(btnPin[i]);
-    led = led || !st;
+    led = led || st;
     if (btnState[i] != st and btnUndr[i] < millis()) {
       btnUndr[i] = millis() + Undr_time;
       if (st) {
@@ -193,12 +194,12 @@ void  checkInput() {
       btnState[i] = st;
     }
   }
-  if (led){
-    digitalWrite(LED1, LOW);
-    digitalWrite(LED2, LOW);
-  }else{
-    led_state();
-  }
+  // if (!led){
+  //   digitalWrite(LED1, LOW);
+  //   digitalWrite(LED2, LOW);
+  // }else{
+  //   led_state();
+  // }
 }
 
 void doorProcessed() {

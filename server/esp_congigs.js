@@ -18,7 +18,12 @@ module.exports = [
   },
   {
     'code': 'logo',
-    'name': 'Лого'
+    'name': 'Лого',
+    'onStatus': {
+      'finish': {
+        '1': ['snake', 'update']
+      }
+    }
   },
   {
     'code': 'injectorBox',

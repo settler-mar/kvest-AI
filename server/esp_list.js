@@ -22,9 +22,9 @@ module.exports = [
     'code': '_',
     'name': 'Название игры',
     'status': {
-      'start': {
-        'title': '',
-        'type': 'text'
+      'login': {
+        'title': 'Пароль',
+        'type': 'status'
       },
     }
   },
@@ -36,10 +36,6 @@ module.exports = [
         'title': 'Сложность',
         'type': 'select',
         'list': [1, 2, 3]
-      },
-      'login': {
-        'title': 'Пароль',
-        'type': 'status'
       },
       'foods': {
         'title': 'Еда',

@@ -12,8 +12,12 @@ function get_number(str) {
 }
 
 const update_file = () => {
-  let content = game.lang + "\n" + hard_level
-  fs.writeFile(base_path + 'SnakeIN.txt', content, {flag: 'w'}, err => {
+  let content = [game.lang,
+    hard_level,
+    typeof esp_status !== 'undefined' && esp_status['logo'] && esp_status['logo']['finish'] ? 1 : 0,
+  ]
+  console.log(base_path + 'SnakeIN.txt')
+  fs.writeFile(base_path + 'SnakeIN.txt', content.join('\n'), {flag: 'w'}, err => {
   })
 }
 
@@ -76,6 +80,10 @@ module.exports = function (code) {
     })
     setTimeout(run_game, 5000)
     return
+  }
+
+  if (code.endsWith('update')) {
+    // console.log(esp_status)
   }
   if (code.indexOf('hard_level') !== -1) {
     hard_level = parseInt(code.split('hard_level')[1]) || 0

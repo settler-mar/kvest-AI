@@ -211,7 +211,7 @@ void readSerial() {
         UART_S.print("name:");
         UART_S.println(NAME);
       }
-      else if (inData.startsWith("start")) {
+      else if (inData.startsWith("run")) {
         startGame();
       }
       else if (inData.startsWith("reset")) {
