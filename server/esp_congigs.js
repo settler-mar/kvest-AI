@@ -5,7 +5,12 @@ module.exports = [
     'has_lang': true,
     'processor': require("./app/processor/hackDevice.js"),
     'onDisconnect': require("./app/processor/hackDevice_disconnect.js"),
-    'display': false
+    'display': false,
+	'onStatus': {
+      'finish_2': {
+        '1': ['doors', 'open1']
+      }
+    }
   },
   {
     'code': 'doors',

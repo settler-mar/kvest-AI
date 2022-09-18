@@ -180,11 +180,10 @@ esp_action.inner = (code, command, ip = 'app') => {
     }
     esp_status[code][command[0]] = command[1] || true;
   }
-
   if (esp_name[code]['onStatus']
     && esp_name[code]['onStatus'][command[0]]
     && esp_name[code]['onStatus'][command[0]][command[1]]) {
-    var cmd = esp_name[code]['onStatus'][command[0]][command[1]]
+    var cmd = [...esp_name[code]['onStatus'][command[0]][command[1]]]
     if (typeof cmd[0] === 'string') {
       cmd = [cmd]
     }
