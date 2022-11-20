@@ -40,6 +40,8 @@ for conf in f.read().split("\n"):
     cams.append(Camera((174, 350 + 380 * i), [init_cam(c) for c in conf.split(" ")], i % 2))
     i = i + 1
 
+cams_hand_control = min(len(cams) - 1, 1)
+
 H = 780
 W = 1240
 
@@ -53,9 +55,6 @@ txt_wrong = Text((538, 115), text="ОБНАРУЖЕНО\nВТОРЖЕНИЕ", fo
 txt_msg = Text((270, 1550), text="Копирование файлов\nна удаленный сервер", fontFile='Bicubik.ttf',
                fontSize=30, color=(255, 255, 255), align=0, line_height=1.5)
 
-cams[0].channel = 0
-cams[0].handControl(True)
-
 
 def main():
     screen_id = 4
@@ -66,9 +65,9 @@ def main():
     # image_r = read_transparent_png("timer_bg.png")
     image_r = cv2.imread("timer_bg.png")
     img_h, img_w, _ = image_r.shape
-    print(image_r.shape)
+    print('timer_bg size', image_r.shape)
     height = int(width * img_h / img_w)
-    print(screen, height, width)
+    print('screen position', screen, height, width)
 
     window_name = 'projector'
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
@@ -116,18 +115,18 @@ class MyServer(BaseHTTPRequestHandler):
 
         if path[0] == 'hand':
             if path[1] == '1':
-                cams[1].channel = 1
-                cams[1].handControl(True)
+                cams[cams_hand_control].channel = len(cams[cams_hand_control].cap_type) - 1
+                cams[cams_hand_control].handControl(True)
                 print('hand control on')
                 requests.get(url='http://127.0.0.1:8080/esp/timer/hand:1')
             if path[1] == '0':
-                cams[1].channel = 0
-                cams[1].handControl(False)
+                cams[cams_hand_control].channel = 0
+                cams[cams_hand_control].handControl(False)
                 print('hand control off')
                 requests.get(url='http://127.0.0.1:8080/esp/timer/hand:0')
         if path[0] == 'reset':
-            cams[1].channel = 0
-            cams[1].handControl(False)
+            cams[cams_hand_control].channel = 0
+            cams[cams_hand_control].handControl(False)
             print('hand control off')
             requests.get(url='http://127.0.0.1:8080/esp/timer/hand:0')
 
