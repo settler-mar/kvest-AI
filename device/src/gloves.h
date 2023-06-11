@@ -7,65 +7,12 @@ byte gloves_map[gloves_len]; // Итоговый код
 byte gloves_pos[gloves_len]; // Расположение символов на экране
 String gloves_pr_code = "";//предыдущий символ
 int gloves_active = -1;
-
-void gloves_clear() {
-  myNex_command("tm0.en=1");
-  // myNex_writeNum("gloves.pic", 69 + lg);
-  myNex_writeNum("p11.pic", 78 + lg);
-  myNex_command("vis p11,1");
-  myNex_writeNum("n0.val", -3);
-  gloves_active = -1;
-}
-
-int gloves_img_by_code(int val) {
-  val = ((val > 10) ? gloves_keys : 0) + (val % 10);
-  return 84 + val * 2;
-}
-
-void gloves_show(byte n) {
-  if (n == 0) {
-    for (byte i = 3;i < 8;i++) {
-      myNex_command("vis p" + String(i) + ",0");
-    }
-    myNex_writeNum("gloves.pic", 75 + lg);
-  }
-
-  myNex_writeNum("k" + String(gloves_pos[n - 1]) + ".pic", gloves_img_by_code(gloves_map[n - 1]) + 1);
-  if (n < gloves_len) {
-    myNex_writeNum("k" + String(gloves_pos[n]) + ".pic", gloves_img_by_code(gloves_map[n]));
-    myNex_command("vis k" + String(gloves_pos[n]) + ",1");
-  }
-}
-
-void updateGloves(String code) {//Входящий символ
-  if (gloves_pr_code == code or gloves_active < 0) return;
-  gloves_pr_code = code;
-  String out = "code_g:";
-  for (byte j = 0;j < gloves_active;j++) {
-    out += String(gloves_map[j]) + "_";
-  }
-  out += code;
-  send(out);
-
-  if (gloves_map[gloves_active] != code.toInt()) {
-    gloves_clear();
-    return;
-  }
-
-
-  gloves_active++;
-  gloves_show(gloves_active);
-  if (gloves_active == gloves_len) { // завершение
-    send("finish_3");
-    gloves_active = -1;
-    myNex_writeNum("p14.pic", 81 + lg);
-    myNex_command("vis p14,1");
-  }
-}
+int gloves_timer = 0;
+int gloves_time = 0;
 
 void updateGlovesCode() {
   //Сгенерировать код
-  gloves_active = 0;
+  // gloves_active = 0;
   gloves_pr_code = "";
   for (byte i = 0;i < gloves_keys;i++) {
     gloves_map0[i] = i;
@@ -105,30 +52,121 @@ void updateGlovesCode() {
     gloves_pos[i] = gloves_pos[j];
     gloves_pos[j] = c;
   }
-  gloves_active = 0;
-  myNex_command("tm0.en=0");
-  gloves_show(0);
+  // gloves_active = 0;
+  // myNex_command("tm0.en=0");
+  //gloves_show(0);
 
   send(out);
-  // Serial.print("new code: ");
-  // Serial.println(out);
+  Serial.print("new code: ");
+  Serial.println(out);
   // Serial.print("\xFF\xFF\xFF");
+}
+
+void gloves_clear() {
+  go_to_page(28);
+  int_write(0x5010+5, 6);
+  int_write(0x5010+6, 8);
+
+  for (byte i = 0; i < gloves_len; i++){
+      int_write(0x5001 + i, 0);
+  }
+
+  gloves_active = -1;
+  gloves_time = 0;
+  gloves_timer = 0;
+
+  updateGlovesCode();
+}
+
+void gloves_stop(){
+  int_write(0x5010+5, 9);
+  int_write(0x5010+6, 11);  
+  gloves_active = gloves_len;
+  gloves_time = 2;
+  gloves_timer = 0;
+}
+
+void gloves_show(byte n, bool active) {
+  if (n < gloves_len) {
+    // byte code = gloves_map[n] + 1;
+    byte code = ((gloves_map[n] > 10) ? gloves_keys : 0) + (gloves_map[n] % 10) + 1;
+    Serial.print(n);
+    Serial.print("_");
+    Serial.print(active);
+    Serial.print("_");
+    if (active)code += 16;
+    int_write(0x5001 + n, code);
+    Serial.println(code);
+  }
+}
+
+void updateGloves(String code) {//Входящий символ
+  if (gloves_pr_code == code or gloves_active < 0) return;
+  gloves_pr_code = code;
+  String out = "code_g:";
+  for (byte j = 0;j < gloves_active;j++) {
+    out += String(gloves_map[j]) + "_";
+  }
+  out += code;
+  send(out);
+
+  if (gloves_map[gloves_active] != code.toInt()) {
+    gloves_stop();
+    return;
+  }
+
+  gloves_show(gloves_active, true);
+  gloves_active++;
+  gloves_show(gloves_active, false);
+  if (gloves_active == gloves_len) { // завершение
+    int_write(0x5010+5, 3);
+    int_write(0x5010+6, 5);
+
+    send("finish_3");
+    gloves_active = gloves_len+1;
+    // myNex_writeNum("p14.pic", 81 + lg);
+    // myNex_command("vis p14,1");
+  }
 }
 
 
 void serialGloves(String inData) {
-  if (gloves_active==-1){
-    updateGlovesCode();
-  }else{
-
-  }
 }
 
 bool getGloves(String currentLine) {
-  int j = currentLine.indexOf("GET /gloves");
+  int j = currentLine.indexOf("/gloves");
   if (j >= 0) {
-    updateGloves(currentLine.substring(j + 13, j + 15));
+    updateGloves(currentLine.substring(j + 9, j + 11));
     return true;
   }
   return false;
+}
+
+void glovesLoop(){
+  if (gloves_active==-1){
+    gloves_timer+=1;
+    if (gloves_timer>=8){
+      gloves_time+=1;
+      gloves_timer=0;
+      if (gloves_time<6) int_write(0x5000, gloves_time);
+      if (gloves_time>=7){
+        gloves_active = 0;
+        gloves_show(0,false);
+        go_to_page(29);
+      }
+    }
+    return;
+  }
+
+  if (gloves_active==gloves_len){
+    gloves_timer+=1;
+    if (gloves_timer>=8){
+      gloves_time+=1;
+      gloves_timer=0;
+      if (gloves_time>=3){
+        gloves_clear();
+      }
+    }
+    return;
+  }
 }

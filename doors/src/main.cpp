@@ -46,8 +46,10 @@
 // -------------------        IO setup     -------------------------
 
 uint8_t btnPin[] = { A0,A1,A2 };
-#define LED1 A3
-#define LED2 4
+#define LED1 4
+#define LED2 A3
+// #define LED1 A5
+// #define LED2 A4
 
 byte motorPin[][2] = { {13,12},{11,10},{8,9} }; // {close,open}
 #define M1_FW 13
@@ -56,9 +58,6 @@ byte motorPin[][2] = { {13,12},{11,10},{8,9} }; // {close,open}
 #define M2_BW 10
 #define M3_FW 8
 #define M3_BW 9
-
-#define CP_RX 4
-#define CP_TX 5
 
 #define NOP __ams__("nop\n\t")
 
@@ -142,10 +141,10 @@ boolean btnCheck(byte pin) {
 }
 
 void led_state(){
-  Serial.print("set led: ");
-  Serial.println(is_run);
-  digitalWrite(LED1, is_run<=1?LOW:HIGH);
-  digitalWrite(LED2, is_run>=1?LOW:HIGH);
+  // Serial.print("set led: ");
+  // Serial.println(is_run);
+  digitalWrite(LED1, is_run<1?LOW:HIGH);
+  digitalWrite(LED2, is_run>1?LOW:HIGH);
 }
 
 void moveMotor(byte motor, boolean stat) {
@@ -219,7 +218,6 @@ void doorProcessed() {
         if (i == 0 && !dState[i] && is_run) {
           is_run -= 1;
           if (is_run == 0) {
-            led_state();
             Serial.println("start_game");
           }else{
             for (byte i = 0; i < 3; i++)
@@ -228,6 +226,7 @@ void doorProcessed() {
               Serial.println("prestart_game");
             }
           }
+          led_state();
         }
         timer[i] = 0;
         digitalWrite(motorPin[i][0], HIGH);
@@ -278,9 +277,12 @@ void setup() {
   UART_S.begin(9600);
   UART_S.println("load");
   reset();
+  digitalWrite(LED1, LOW);
+  digitalWrite(LED2, LOW);
   delay(moto_time_max);
   moveMotor(0, true); // open door0
   UART_S.println("init");
+  led_state();
 }
 
 void readSerial() {

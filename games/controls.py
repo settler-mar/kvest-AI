@@ -214,21 +214,29 @@ class Camera:
     up_ctrl = 0
     hand_is_online: bool = False
     hand_board = False
+    only_cam = False
+    w = 566
+    h = 348
 
     def __init__(self, position, cap, flip=False):  # (170, 350)
-        x, y = position
+        if not position:
+            position = 0, 0
+            self.only_cam = True
+        else:
+            x, y = position
+            self.texts = [
+                Text(len=random.randint(18, 24), position=(236 + x, 20 + y)),
+                Text(len=random.randint(18, 24), position=(236 + x, 40 + y)),
+                Text(len=random.randint(18, 24), position=(236 + x, 60 + y)),
+                Text(len=random.randint(18, 24), position=(236 + x, 80 + y))
+            ]
+            self.pb = [
+                ProgressBar((236 + x, 120 + y)),
+                ProgressBar((236 + x, 142 + y)),
+                ProgressBar((236 + x, 162 + y)),
+            ]
+
         self.position = position
-        self.texts = [
-            Text(len=random.randint(18, 24), position=(236 + x, 20 + y)),
-            Text(len=random.randint(18, 24), position=(236 + x, 40 + y)),
-            Text(len=random.randint(18, 24), position=(236 + x, 60 + y)),
-            Text(len=random.randint(18, 24), position=(236 + x, 80 + y))
-        ]
-        self.pb = [
-            ProgressBar((236 + x, 120 + y)),
-            ProgressBar((236 + x, 142 + y)),
-            ProgressBar((236 + x, 162 + y)),
-        ]
         self.cap = cap
         self.cap_type = [isinstance(s, str) for s in cap]
         self.channel = 0
@@ -378,21 +386,26 @@ class Camera:
             pyautogui.keyUp(key)
 
     def render(self, image):
-        for p in self.pb:
-            p.render(image)
         x, y = self.position
-        w = 566
-        h = 348
-        cv2.rectangle(image, (270 + x, 10 + y), (270 + w + x, 10 + h + y), (0xd6, 0xef, 0x78), 4)
-        for j in range(13):
-            cv2.rectangle(image, (262 + x + w, 20 + y + j * 26), (245 + x + w, 39 + y + j * 26),
-                          (0xd6, 0xef, 0x78), -1)
-        if self.success:
+        x_offset, y_offset = self.position
+        b = 0
+        b_ = [0, 0]
+        if not self.only_cam:
             b = 10
+            x_offset += 278 + b
+            y_offset += 18 + b
+            b_ = [38, 16]
+
+            for p in self.pb:
+                p.render(image)
+            cv2.rectangle(image, (270 + x, 10 + y), (270 + self.w + x, 10 + self.h + y), (0xd6, 0xef, 0x78), 4)
+            for j in range(13):
+                cv2.rectangle(image, (262 + x + self.w, 20 + y + j * 26), (245 + x + self.w, 39 + y + j * 26),
+                              (0xd6, 0xef, 0x78), -1)
+
+        if self.success:
             try:
-                camImg = cv2.resize(self.camImg, (w - 38 - b * 2, h - b * 2 - 16))
-                x_offset = 278 + b + x
-                y_offset = 18 + b + y
+                camImg = cv2.resize(self.camImg, (self.w - b_[0] - b * 2, self.h - b * 2 - b_[1]))
                 image[y_offset:y_offset + camImg.shape[0], x_offset:x_offset + camImg.shape[1]] = camImg
             except:
                 pass

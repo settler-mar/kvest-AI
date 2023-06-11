@@ -36,7 +36,7 @@ const int startupDelay = 3000; //  delay before program start ms
 boolean _loop = false; // finish flag
 int lvl = 1; // game lvl
 const int NOISE_DELAY = 25; // millis for debounce
-const int DONE_DELAY = 3000; // millis for DONE signal
+const int DONE_DELAY = 500; // millis for DONE signal
 const int TEST_MINUTES = 2; // minutes for test
 unsigned long timer = 0;
 
@@ -199,6 +199,7 @@ void startTest() {
 void finishGame() {
   lvl = 4;
   timer = 0;
+  digitalWrite(LOGO_OPEN, HIGH);
 }
 
 void readSerial() {
@@ -224,7 +225,8 @@ void readSerial() {
         startTest();
       }
       else if (inData.startsWith("finish")) {
-        finishGame();
+        lvl=3;
+        timer = 0;
       }
 
       inData = ""; // Clear recieved buffer
@@ -375,6 +377,7 @@ void doneGame() {
   ledsOff();
   // Open logo
   digitalWrite(LOGO_OPEN, LOW);
+  delay(10);
 
   // finished signal
   if (millis() - timer < DONE_DELAY) {

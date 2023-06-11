@@ -68,9 +68,9 @@ void setPins(byte pin, boolean stat) {
 
 
 void update_leds(byte i, byte st) {
-  leds[i * 3 + 2] = st == 0 ? CRGB(0, 0, 255) : CRGB::Black;
-  leds[i * 3 + 1] = st == 1 ? CRGB(0, 0, 200) : CRGB::Black;
-  leds[i * 3 + 0] = st == 2 ? CRGB(0, 0, 255) : CRGB::Black;
+  leds[i * 3 + 2] = st == 0 && is_run ? CRGB(0, 0, 255) : CRGB::Black;
+  leds[i * 3 + 1] = st == 1 && is_run ? CRGB(0, 0, 200) : CRGB::Black;
+  leds[i * 3 + 0] = st == 2 && is_run ? CRGB(0, 0, 255) : CRGB::Black;
 }
 
 void update_btn() {

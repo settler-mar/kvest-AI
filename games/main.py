@@ -19,6 +19,10 @@ import re
 import requests
 from controls import *
 
+H = 780
+W = 1240
+cams_hand_control = True
+
 
 def init_cam(c):
     if len(c) < 3:
@@ -35,15 +39,15 @@ def init_cam(c):
 
 f = open("cams.txt", "r")
 cams = []
+hand_cam = None
 i = 0
 for conf in f.read().split("\n"):
-    cams.append(Camera((174, 350 + 380 * i), [init_cam(c) for c in conf.split(" ")], i % 2))
-    i = i + 1
-
-cams_hand_control = min(len(cams) - 1, 1)
-
-H = 780
-W = 1240
+    if cams:
+        cams.append(Camera((174, 350 + 380 * i), [init_cam(c) for c in conf.split(" ")], i % 2))
+        i = i + 1
+    else:
+        hand_cam = Camera(None, [init_cam(c) for c in conf.split(" ")], True)
+        hand_cam.handControl(False)
 
 timer = Timer((538, 1620), text="", fontFile='CodenameCoderFree4F-Bold.ttf', fontSize=200, color=(255, 0, 0),
               align=1)
@@ -54,6 +58,20 @@ txt_wrong = Text((538, 115), text="ОБНАРУЖЕНО\nВТОРЖЕНИЕ", fo
 
 txt_msg = Text((270, 1550), text="Копирование файлов\nна удаленный сервер", fontFile='Bicubik.ttf',
                fontSize=30, color=(255, 255, 255), align=0, line_height=1.5)
+
+
+def create_capture_windows():
+    window_name = 'cam'
+    screen_id = 1
+    screen_cnt = len(screeninfo.get_monitors())
+    screen = screeninfo.get_monitors()[min(screen_cnt - 1, screen_id)]
+
+    cv2.namedWindow('cam', cv2.WINDOW_AUTOSIZE)
+    cv2.setWindowProperty('cam', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+    cv2.moveWindow(window_name, screen.x + screen.width - hand_cam.w, screen.y - 1)
+    cv2.resizeWindow(window_name, hand_cam.w, hand_cam.h)
+    hand_cam.handControl(True)
 
 
 def main():
@@ -73,6 +91,9 @@ def main():
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.moveWindow(window_name, screen.x - 1, screen.y - 1)
     cv2.resizeWindow(window_name, width, height)
+
+    if cams_hand_control:
+        create_capture_windows()
 
     # cv2.namedWindow(window_name, cv2.WND_PROP_FULLSCREEN)
     # cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
@@ -97,11 +118,19 @@ def main():
             cam.render(image)
 
         cv2.imshow(window_name, image)
+
+        if cams_hand_control:
+            image = np.zeros((hand_cam.h, hand_cam.w, 3), np.uint8)
+            hand_cam.render(image)
+            cv2.imshow('cam', image)
+
         cv2.waitKey(1)
 
 
 class MyServer(BaseHTTPRequestHandler):
     def do_GET(self):
+        global cams_hand_control
+
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
@@ -115,18 +144,20 @@ class MyServer(BaseHTTPRequestHandler):
 
         if path[0] == 'hand':
             if path[1] == '1':
-                cams[cams_hand_control].channel = len(cams[cams_hand_control].cap_type) - 1
-                cams[cams_hand_control].handControl(True)
+                cams_hand_control = True
+                create_capture_windows()
                 print('hand control on')
                 requests.get(url='http://127.0.0.1:8080/esp/timer/hand:1')
             if path[1] == '0':
-                cams[cams_hand_control].channel = 0
-                cams[cams_hand_control].handControl(False)
+                cams_hand_control = False
+                hand_cam.handControl(False)
+                cv2.destroyWindow("cam")
                 print('hand control off')
                 requests.get(url='http://127.0.0.1:8080/esp/timer/hand:0')
         if path[0] == 'reset':
-            cams[cams_hand_control].channel = 0
-            cams[cams_hand_control].handControl(False)
+            cams_hand_control = False
+            hand_cam.handControl(False)
+            cv2.destroyWindow("cam")
             print('hand control off')
             requests.get(url='http://127.0.0.1:8080/esp/timer/hand:0')
 

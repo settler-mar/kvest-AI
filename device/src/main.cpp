@@ -1,40 +1,41 @@
 //#include "EasyNextionLibrary.h"  // Include EasyNextionLibrary
 #include <FS.h>                   //this needs to be first, or it all crashes and burns...
 
-#include <DNSServer.h>
-#include <ESP8266WebServer.h>
-#include <ESP8266WiFi.h>
-#include <ESP8266WiFiMulti.h>
-//#include <ESP8266HTTPClient.h>
-#include <ArduinoHttpClient.h>
+#include <SoftwareSerial.h>
+#include <SPI.h>              // include libraries
+#include <LoRa.h>
 
-#include <nextioon.h>
-// #define debug_game 1
+#define ss 15
+#define rst 16
+#define dio0 2
+
+byte msgCount = 0;            // count of outgoing messages
+byte localAddress = 0xBB;     // address of this device
+byte destination = 0xFF;      // destination to send to
+long lastSendTime = 0;        // last send time
+int interval = 2000;          // interval between sends
+
+SoftwareSerial dSerial; 
+#include <dwin_diaplay.h>
+// #define debug_game 2
 
 #define client_finish client.stop();
 #define SEND_BY_X_COMMAND
 
-ESP8266WiFiMulti WiFiMulti;
-
-String inData;
-#define host "192.168.0.100"
-#define httpPort 8080
-#define SSID "ai"
-#define WIFI_PASS "66430346"
-
-
-// Define timeout time in milliseconds (example: 2000ms = 2s)
-#define  timeoutTime 3000
+byte Buffer[20];                //Создать буфер
+byte Buffer_Len = 0;
+bool flag = false;
 
 String name = "hackDevice";
 byte lg = 0;
+byte timer_to_game = 0;
+uint32_t  myTimer;
+boolean start_game = false; //запущенна ли игра
 
 #ifdef debug_game
-  boolean start_game = true; //Обовленно ли имя
   bool has_lang = true;
   byte game = debug_game;
 #else
-  boolean start_game = false; //Обовленно ли имя
   bool has_lang = false;
   byte game = 0;
 #endif
@@ -43,10 +44,7 @@ byte lg = 0;
 unsigned long currentTime = millis();
 // Previous time
 unsigned long previousTime = 500;
-unsigned long previousTime2 = 500;
 unsigned long serial_t = millis();
-
-WiFiServer server(80);
 
 void send(String);
 void updateLg();
@@ -58,18 +56,20 @@ void updateLg();
 
 
 void updateLg() { // отправить на дисплей язык
-  if (not start_game) return;
-  myNextion_cr();
-  if (game == 1) {
-    myNex_writeNum("air.pic", lg);
-    myNex_writeNum("air.air.pic", lg);
-  }
+  int_write(0x4000,lg);
 }
 
 bool test_get_lang(String currentLine) {
-  int j = currentLine.indexOf("GET /lang/");
+  int j = currentLine.indexOf("/lang/");
   if (j >= 0) {
-    String lang = currentLine.substring(j + 10, j + 12);
+    String lang = currentLine.substring(j + 6, j + 8);
+    Serial.print("test_get_lang ");
+    Serial.print(j);
+    Serial.print(" ");
+    Serial.print(currentLine.substring(j + 6, j + 8));
+    Serial.print(" ");
+    Serial.println(lang);
+
     if (lang == "en") {
       lg = 0;
       has_lang = true;
@@ -91,47 +91,59 @@ bool test_get_lang(String currentLine) {
 }
 
 bool test_get_game(String currentLine) {
-  int j = currentLine.indexOf("GET /game/");
+  int j = currentLine.indexOf("/game/");
   if (j >= 0) {
-    game = currentLine.substring(j + 10, j + 11).toInt();
-    myNex_writeNum("n0.val", game);
+    game = currentLine.substring(j + 6, j + 7).toInt();
+    // myNex_writeNum("n0.val", game);
     return true;
   }
   return false;
 }
 
-void get() {
-  WiFiClient client = server.available();   // Listen for incoming clients
-  if (client) {                             // If a new client connects,
-    // Serial.println("New Client inner.");          // print a message out in the serial port
-    String currentLine = "";                // make a String to hold incoming data from the client
-    currentTime = millis();
-    previousTime = currentTime;
-    while (client.connected() && currentTime - previousTime <= timeoutTime) { // loop while the client's connected
-      currentTime = millis();
-      if (client.available()) {             // if there's bytes to read from the client,
-        currentLine = client.readStringUntil('\n');
-        if (currentLine.length() > 0 and currentLine.indexOf("GET") >= 0) {
-          if (test_get_lang(currentLine) ||
-            (not start_game && test_get_game(currentLine)) ||
-            ((game == 1) && getAir(currentLine)) ||
-            ((game == 3) && getGloves(currentLine))
-            ) {
-            client.flush();
-            client.println("ok");
-            client_finish
-              return;
-          }
-          client.println("wr");
-          client_finish
-            return;
-        }
-      }
-    }
-    client.flush();
-    client.println("ok");
-    client_finish
+void onReceive(int packetSize) {
+  if (packetSize == 0) return;          // if there's no packet, return
+
+  // read packet header bytes:
+  // int recipient = LoRa.read();          // recipient address
+  // byte sender = LoRa.read();            // sender address
+  byte incomingMsgId = LoRa.read();     // incoming msg ID
+  byte incomingLength = LoRa.read();    // incoming msg length
+
+  String incoming = "";
+
+  while (LoRa.available()) {
+    incoming += (char)LoRa.read();
   }
+
+  if (incomingLength != incoming.length()) {   // check length for error
+    Serial.println("error: message length does not match length");
+    return;                             // skip rest of function
+  }
+
+  // if the recipient isn't this device or broadcast,
+  // if (recipient != localAddress && recipient != 0xFF) {
+  //   Serial.println("This message is not for me.");
+  //   return;                             // skip rest of function
+  // }
+
+  // if message is for this device, or broadcast, print details:
+  // Serial.println("Received from: 0x" + String(sender, HEX));
+  // Serial.println("Sent to: 0x" + String(recipient, HEX));
+  // Serial.println("Message ID: " + String(incomingMsgId));
+  // Serial.println("Message length: " + String(incomingLength));
+  Serial.println("Message:" + incoming);
+  Serial.println("RSSI:" + String(LoRa.packetRssi()));
+  Serial.println("Snr:" + String(LoRa.packetSnr()));
+  Serial.println();
+
+  if (test_get_lang(incoming) ||
+    (not start_game && test_get_game(incoming)) ||
+    ((game == 1) && getAir(incoming)) ||
+    ((game == 3) && getGloves(incoming))
+    
+    ) {
+      return;
+  }  
 }
 
 String clearName(String txt) {
@@ -156,123 +168,169 @@ String clearName(String txt) {
   return out;
 }
 
-void send(String url_ = "") {
-  WiFiClient wifi;
-  HttpClient client = HttpClient(wifi, host, httpPort);
+void send(String outgoing = "") {
 
-#ifdef SEND_BY_X_COMMAND
-  String url = "/esp/" + name;
-#else
-  String url = "/esp/" + name;
-  if (url_ != "") {
-    url += "/" + url_;
-  }
-#endif
+  outgoing = clearName(outgoing);
 
-  byte url_len = url.length() + 1;
-  char url2[url_len];
-  url.toCharArray(url2, url_len);
-
-  client.beginRequest();
-  client.get(url2);
-#ifdef SEND_BY_X_COMMAND
-  if (url_ != "") {
-    url_ = clearName(url_);
-    url_len = url_.length() + 1;
-    char url_2[url_len];
-    url_.toCharArray(url_2, url_len);
-
-    client.sendHeader("X-COMMAND", url_2);
-    client.sendHeader("test", url_len);
-    client.sendHeader("ZA", url2);
-    // Serial.println(url_len);
-  }
-#endif
-  client.endRequest();
+  if (outgoing.length() < 2) return;
+  LoRa.beginPacket();                   // start packet
+  // LoRa.write(destination);              // add destination address
+  // LoRa.write(localAddress);             // add sender address
+  LoRa.write(msgCount);                 // add message ID
+  LoRa.write(outgoing.length());        // add payload length
+  LoRa.print(outgoing);                 // add payload
+  LoRa.endPacket();                     // finish packet and send it
+  msgCount++;                           // increment message ID
 }
 
 void processed_serial() {
-  if (inData.length() > 2) {
-    if (game == 1 && inData.charAt(0) == 0x23) serialAir(inData);
-    if (game == 2 && inData.charAt(0) == 0x02) serialCodes(inData);
-    if (game == 3 && inData.charAt(0) == 0x03) serialGloves(inData);
+  if (Buffer[0] == 0X5A && Buffer[1] == 0XA5) {
+    if (!start_game){
+      if (Buffer[4] == 0X50 && Buffer[5] == 0X70) {
+        if (Buffer[7] == 0x21 && Buffer[8] == 0x31){
+          timer_to_game = 50;
+          start_game=false;
+        }
+      }
+    }else if(game==1){
+        // serialAir();
+    }
+    }else if(game==2){
+        serialCodes();
+    }
+  if (Buffer[4] == 0X00) {  // Принимаем ситемные данные
+    if (Buffer[5] == 0X82) {
+
+    }
   }
-  inData = ""; // Clear recieved buffer
-  serial_t = 0;
+  // if (inData.length() > 2) {
+  //   if (game == 1 && inData.charAt(0) == 0x23) serialAir(inData);
+  //   if (game == 2 && inData.charAt(0) == 0x02) serialCodes(inData);
+  //   if (game == 3 && inData.charAt(0) == 0x03) serialGloves(inData);
+  // }
+  // inData = ""; // Clear recieved buffer
+  // serial_t = 0;
 }
 
 void readSerial() {
-  while (Serial.available() > 0)
+  while (dSerial.available())
   {
+    // go_to_page(3);
     serial_t = millis();
-    char recieved = Serial.read();
-    if (recieved == '\n')
+      Buffer[Buffer_Len] = dSerial.read();
+      if (Buffer[Buffer_Len]<10) Serial.print(0);
+      Serial.print(Buffer[Buffer_Len], HEX);
+      Serial.print(" ");
+      Buffer_Len++;
+      flag = true;
+    }
+  if (flag)
     {
       processed_serial();
+      Serial.println();
+      Buffer_Len = 0; // сброс номера элемента в массиве
+      flag = false;
     }
-    else {
-      if (recieved == 0xff) {
-        byte l = inData.length();
-        if (l > 3 && inData.charAt(l - 1) == 0xff && inData.charAt(l - 2) == 0xff) {
-          inData = "";
-          return;
-        }
-      }
-      inData += recieved;
-    }
-  }
-  if (serial_t && serial_t + 150 < millis()) {
-    processed_serial();
-  }
+  // if (serial_t && serial_t + 150 < millis()) {
+  //   processed_serial();
+  // }
+}
+
+void mute(){
+  byte mute_[]={0x5A, 0xA5, 0x07, 0x82, 0x00, 0x80, 0x5A, 0x00, 0x00, 0x30};
+  dSerial.write(mute_, 10);
+  delay(100);
 }
 
 void setup() {
-  Serial.begin(9600);
-  Serial.println();
-  Serial.println("start");
+  Serial.begin(115200);
+  dSerial.begin(115200, SWSERIAL_8N1, 4, 5, false);
 
-  /*SPIFFS.begin();
-  delay(600);
-  SPIFFSConfig cfg;
-  cfg.setAutoFormat(true);
-  SPIFFS.setConfig(cfg);*/
+  LoRa.setPins(ss, rst, dio0);// set CS, reset, IRQ pin
 
-  WiFi.setSleepMode(WIFI_NONE_SLEEP);
-  WiFi.begin(SSID, WIFI_PASS);
-
-  while (WiFi.status() != WL_CONNECTED) {
-    Serial.print(".");
-    delay(500);
+  if (!LoRa.begin(433E6)) {             
+    Serial.println("LoRa init failed. Check your connections.");
+    while (true);                       // if failed, do nothing
   }
-  Serial.println();
-  Serial.println("IP address: ");
-  Serial.println(WiFi.localIP());
-  myNextion_cr();
 
-  server.begin();
+  // Serial.println();
+  // Serial.println("start");
+  /*delay(2000);
+  go_to_page(15);
+  while (true){
+    for(byte i=0; i<10;i++){
+      int_write(0x5001,i);
+      for(byte j=0; j<10;j++){
+        int_write(0x6000+j*16,i);
+      }
+      for(byte j=0; j<5;j++){
+        int_write(0x6100+j*16,i);
+        // int_write(0x6203+j*16,0xF800);
+        int_write(0x6203+j*16,0x07E0);
+      }
+      delay(1000);
+    }
+  }/**/
+
+  // SPIFFS.begin();
+  // delay(600);
+  // SPIFFSConfig cfg;
+  // cfg.setAutoFormat(true);
+  // SPIFFS.setConfig(cfg);
+
+  delay(1000);
+  // mute();
+  go_to_page(0);
+  updateLg();
+
+  /*go_to_page(29);
+  while (true){
+    for (byte i=0;i<3;i++){
+      lg=i;
+      updateLg();
+      // delay(2000);
+      for (byte i=0;i<3;i++){
+        int_write(0x5010+5, i*3+3);
+        int_write(0x5010+6, i*3+5);
+        Serial.println(i);
+        // long_write(0x6314+i, 150+i*2);
+        delay(1000);
+      }
+    }
+
+    for (byte i=0;i<29;i++){
+      int_write(0x5001, i);
+      int_write(0x5002, i);
+      int_write(0x5003, i);
+      int_write(0x5004, i);
+      int_write(0x5005, i);
+      int_write(0x5006, i);
+      Serial.println(i);
+      // long_write(0x6314+i, 150+i*2);
+      delay(100);
+    }
+
+    // checkResultAir();
+    // readSerial();
+    // onReceive(LoRa.parsePacket());
+  }/**/
 }
 
 void loop() {
-  // Serial.println(0);
-  if (not start_game) {
-    if (previousTime2 < millis()) {
-      previousTime2 = millis() + 1000;
-    }
-    //myNex.currentPageId
-  }
-  // Serial.println(1);
+  // test_wifi();
   readSerial();
-  // Serial.println(2);
-  get();
-  // Serial.println(3);
-  // Serial.println(previousTime);
-  // Serial.println(millis());
+  onReceive(LoRa.parsePacket());
   if (previousTime < millis()) {
     // Serial.print("n0.val=100");
     // Serial.write(0xff);Serial.write(0xff);Serial.write(0xff);
     if (has_lang) {
-      send();
-      previousTime = millis() + 10000;
+      if (game==0){
+        send("game");
+        previousTime = millis() + 5000;
+      }else{
+        send("ping");
+        previousTime = millis() + 10000;        
+      }
     }
     else {
       send("lang");
@@ -280,9 +338,28 @@ void loop() {
       previousTime = millis() + 5000;
     }
   }
-  if (game == 1) {
-    checkResultAir();
+
+  if (myTimer<millis()){
+    myTimer=millis()+100;
+    if (timer_to_game){
+      timer_to_game--;
+      if (!timer_to_game){
+        if (game){
+          if (!start_game){
+            start_game = true;
+            if(game==1)go_to_page(26);
+            if(game==2)updateCode();
+            if(game==3)gloves_clear();
+          }
+        }else{
+          timer_to_game = 20;
+        }
+      }
+    }
+    if (start_game){
+      if (game == 1) checkResultAir();
+      if (game == 2) codesLoop();
+      if (game == 3) glovesLoop();
+    }
   }
-  // Serial.println(4);
-  delay(10);
 }

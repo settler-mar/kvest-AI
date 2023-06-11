@@ -3,10 +3,11 @@ module.exports = [
     'code': 'hackDevice',
     'name': 'Хакерское устройство',
     'has_lang': true,
-    'processor': require("./app/processor/hackDevice.js"),
+    'processor': require("./app/processor/hackDevice.js").processor,
+    'send': require("./app/processor/hackDevice.js").send,
     'onDisconnect': require("./app/processor/hackDevice_disconnect.js"),
     'display': false,
-	'onStatus': {
+    'onStatus': {
       'finish_2': {
         '1': ['doors', 'open1']
       }
