@@ -1,6 +1,8 @@
 Запускать 
 
-npm run
+nvm use 14
+
+npm run start
 
 
 Открыть порты на ubuntu
@@ -14,3 +16,7 @@ sudo iptables -A INPUT -p tcp --dport 8080 -j ACCEPT
 Запустить через доккер
 
 docker build --tag server .
+
+
+http://127.0.0.1:8080/video.html - 4 монитора
+http://127.0.0.1:8080/snake.html
