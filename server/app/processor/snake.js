@@ -1,4 +1,3 @@
-const exec = require('child_process').execFile;
 const colors = require('colors');
 const fs = require('fs')
 const base_path = require('../../paths.js')['snake']
@@ -21,16 +20,6 @@ const update_file = () => {
   })
 }
 
-const run_game = () => {
-  update_file()
-  fs.writeFile(base_path + 'GamePhase.txt', 'Start', {flag: 'w'}, err => {
-  })
-  fs.writeFile(base_path + 'SnakeOUT.txt', 'init\n', {flag: 'w'}, err => {
-  })
-  if (fs.existsSync(base_path + 'Snake.exe')) {
-    exec(base_path + 'Snake.exe', {'cwd': base_path})
-  }
-}
 
 fs.watchFile(base_path + 'SnakeOUT.txt', function (event, filename) {
 	
@@ -75,10 +64,6 @@ fs.watchFile(base_path + 'SnakeOUT.txt', function (event, filename) {
 module.exports = function (code) {
   if (code.endsWith('reset')) {
     hard_level = 2
-    esp_action.inner('snake', ['hard_level', hard_level])
-    fs.writeFile(base_path + 'GamePhase.txt', 'End\n', function (event, filename) {
-    })
-    setTimeout(run_game, 5000)
     return
   }
 
@@ -90,4 +75,3 @@ module.exports = function (code) {
   }
   update_file()
 }
-run_game()
