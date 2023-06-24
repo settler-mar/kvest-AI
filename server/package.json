@@ -7,8 +7,6 @@
         "run": "node app/index.js"
     },
     "dependencies": {
-        "@serialport/bindings": "^9.2.9",
-        "@serialport/list": "^10.5.0",
         "body-parser": "^1.18.2",
         "colors": "^1.4.0",
         "compression": "^1.7.2",

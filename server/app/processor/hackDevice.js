@@ -1,5 +1,4 @@
 const {SerialPort, ReadlineParser} = require('serialport')
-const serial_list = require('@serialport/bindings')
 
 let listOfPorts = [];
 let last_port = null
@@ -16,7 +15,7 @@ function find_connect() {
       port.close()
     }
     if (esp_action) esp_action.inner(app, [], "scan")
-    serial_list.list().then(get_port_list)
+    SerialPort.list().then(get_port_list)
   }
 }
 
