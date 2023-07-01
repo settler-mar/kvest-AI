@@ -71,7 +71,7 @@ class MouseControl:
         if self.mouse_display == -1:
             dx = x - self.x_min
             dy = y - self.y_min
-            if abs(dx) > 2 or abs(dy) > 2:
+            if abs(dx) > 1 or abs(dy) > 1:
                 if abs(dx) > abs(dy):
                     if dx > 0:
                         pyautogui.keyDown("right")

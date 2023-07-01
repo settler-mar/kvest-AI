@@ -443,8 +443,8 @@ function drawGame() {
     };
   }
 
-  if (next_move < new Date().getTime()) {
-    next_move = new Date().getTime() + 200
+//  if (next_move < new Date().getTime()) {
+//    next_move = next_move + tact_render
 
     if (snake[snake.length - 2].can_remove) snake.pop();
 
@@ -481,7 +481,7 @@ function drawGame() {
     eatTail(newHead, snake);
 
     snake.unshift(newHead);
-  }
+//  }
 }
 
 // Отрисовка меню
@@ -527,6 +527,10 @@ const reset_level = function (go) {
   video.style.display = 'none'
   video.pause()
   canvas.classList.add('no_cursor')
+  if (game){
+    clearInterval(game)
+  }
+  next_move = new Date().getTime() + 200
   snake = [
     {x: 4, y: 4, alpha: 0, can_remove: true},
     {x: 3, y: 4, alpha: 0, can_remove: true},
@@ -539,13 +543,13 @@ const reset_level = function (go) {
   if (!foot_map[level] || (!go && all_level_done)) {
     all_level_done = true
     canvas.classList.remove('no_cursor')
-    game = setInterval(drawMenu, 50);
+    game = setInterval(drawMenu, 100);
   } else {
     food = {
       x: foot_map[level][score][0],
       y: foot_map[level][score][1],
     };
-    game = setInterval(drawGame, 20);
+    game = setInterval(drawGame, 200);
   }
 }
 
@@ -658,5 +662,5 @@ function drawKeyboard() {
 
 reset_level(true)
 
-// game = setInterval(drawMenu, 50);
-// game = setInterval(drawKeyboard, 50);
+// game = setInterval(drawMenu, 100);
+// game = setInterval(drawKeyboard, 100);
