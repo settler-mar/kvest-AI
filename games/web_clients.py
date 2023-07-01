@@ -58,10 +58,10 @@ class MouseControl:
             y_min = self.monitors[0].y + self.monitors[0].height / 2
             pyautogui.moveTo(x_min, y_min, duration=0.1)
             return
-        self.x_min = self.monitors[0].x
-        self.y_min = self.monitors[0].y
-        self.x_max = self.monitors[0].x + self.monitors[0].width
-        self.y_max = self.monitors[0].y + self.monitors[0].height
+        self.x_min = self.monitors[self.mouse_display].x
+        self.y_min = self.monitors[self.mouse_display].y
+        self.x_max = self.monitors[self.mouse_display].x + self.monitors[self.mouse_display].width
+        self.y_max = self.monitors[self.mouse_display].y + self.monitors[self.mouse_display].height
 
         pyautogui.moveTo((self.x_min + self.x_max) / 2, (self.y_min + self.y_max) / 2, duration=0.1)
 
@@ -120,3 +120,7 @@ def main():
 
     while listener.is_alive():
         mouse_control.processed()
+
+
+if __name__ == '__main__':
+    main()
