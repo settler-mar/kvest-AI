@@ -17,7 +17,10 @@ import requests
 import tkinter as tk
 import json
 
-host = '127.0.0.1'
+pages = [
+    # ('http://127.0.0.1:8080/video.html', 2),
+    ('http://127.0.0.1:8080/snake.html', 2)
+]
 
 
 class Display:
