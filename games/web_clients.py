@@ -7,7 +7,7 @@ from pynput import keyboard
 
 pages = [
     # ('http://127.0.0.1:8080/video.html', 2),
-    ('http://127.0.0.1:8080/snake.html', 3)
+    ('http://127.0.0.1:8080/snake.html', 2)
 ]
 
 mouse_display = -1  # номер экрана на котором мыш. усли -1 то эмитирует клавиатуру
