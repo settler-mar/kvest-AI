@@ -109,6 +109,7 @@ const sendEsp = (path, code, test_property) => {
 esp_action.send = sendEsp;
 
 esp_action.reset = () => {
+  wss_send('command', 'reset')
   console.log(colors.cyan('esp reset'));
   esp_status = {};
   wss_send('status', JSON.stringify(esp_status));
@@ -116,6 +117,7 @@ esp_action.reset = () => {
 }
 
 esp_action.start = () => {
+  wss_send('command', 'start')
   console.log(colors.cyan('esp start'));
   sendEsp('/start')
 }
@@ -124,6 +126,7 @@ esp_action.do = (code, event) => {
   console.log(colors.cyan('esp do '), code, '>', event);
   sendEsp('/' + event, code)
 }
+
 esp_action.lang = (lang) => {
   console.log(colors.cyan('esp lang'), lang);
   sendEsp('/lang/' + lang, false, 'has_lang')

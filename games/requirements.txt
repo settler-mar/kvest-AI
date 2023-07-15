@@ -12,3 +12,4 @@ requests==2.26.0
 pynput
 selenium
 pynput
+websocket-client

@@ -4,10 +4,11 @@ from time import sleep
 from screeninfo import get_monitors
 import pyautogui
 from pynput import keyboard
+from ws_client import WebSocketClient
 
 pages = [
+    ('http://127.0.0.1:8080/snake.html', 2),
     # ('http://127.0.0.1:8080/video.html', 2),
-    ('http://127.0.0.1:8080/snake.html', 2)
 ]
 
 
@@ -25,12 +26,14 @@ class Display:
 
     def reload(self):
         self.driver.fullscreen_window()
+        sleep(0.1)
         self.driver.refresh()
+        sleep(0.1)
         self.driver.fullscreen_window()
 
 
 class MouseControl:
-    mouse_display = -1  # номер экрана на котором мыш. усли -1 то эмитирует клавиатуру
+    mouse_display = 0  # номер экрана на котором мыш. усли -1 то эмитирует клавиатуру
     monitors = get_monitors()
 
     x_min, y_min = 100, 100
@@ -41,7 +44,26 @@ class MouseControl:
         self.displays = [Display(url,
                                  self.monitors[display_number if display_number < len(self.monitors) else 0])
                          for url, display_number in pages]
+        self.reset()
+
+        message_handlers = {
+            "command": self.command,
+            # "game": print,
+        }
+
+        address = "ws://127.0.0.1:8080"
+
+        client = WebSocketClient(address, message_handlers)
+        client.start()
+
+        self.client = client
+
+    def reset(self):
+        if self.displays:
+            self.mouse_display = pages[0][1] if pages[0][1] < len(self.monitors) else 0
         self.set_pos()
+
+        [display.reload() for display in self.displays]
 
     def print_monitor_info(self):
         # Перебор дисплеев и получение их свойств
@@ -103,6 +125,14 @@ class MouseControl:
         # Перемещаем курсор в ограниченные координаты
         pyautogui.moveTo(x, y, duration=0.1)
 
+    def command(self, data):
+        if data == 'reset':
+            self.reset()
+
+    def stop(self):
+        self.client.stop()
+        [display.driver.close() for display in self.displays]
+
     def processed(self):
         self.update_mouse_pos()
 
@@ -120,6 +150,7 @@ def main():
 
     while listener.is_alive():
         mouse_control.processed()
+    mouse_control.stop()
 
 
 if __name__ == '__main__':

@@ -660,7 +660,9 @@ function drawKeyboard() {
   drawInput(inputField)
 }
 
-reset_level(true)
+// reset_level(true)
 
-// game = setInterval(drawMenu, 100);
-// game = setInterval(drawKeyboard, 100);
+// game = setInterval(drawMenu, 50);
+game = setInterval(drawKeyboard, 50);
+
+setTimeout(ws_send, 500, 'hard_level', hard_level)

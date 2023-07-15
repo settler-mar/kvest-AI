@@ -16,6 +16,7 @@ const timer = require("../../app/processor/timer.js")
 function timer_pause() {
   console.log('timer_pause')
   timer('/time/pause')
+  wss_send('command', 'pause')
 }
 
 function timer_send() {
@@ -50,6 +51,7 @@ module.exports = (config) => {
   }
 
   game_control.addTime = () => {
+    wss_send('command', 'add time')
     game.game_time += 60 * 5
     timer_send()
   }
@@ -59,6 +61,7 @@ module.exports = (config) => {
       game.time = 0;
       esp_action.reset();
       console.log('reset on start')
+      wss_send('command', 'reset')
     }
 
     if (game.time === 0) {
@@ -81,7 +84,7 @@ module.exports = (config) => {
       esp_action.send('on1', 'air');
     }, 1000);
 
-    wss_send('media','1:doors:ch0')
+    wss_send('media', '1:doors:ch0')
 
     update_game();
     timer_send();
@@ -119,6 +122,12 @@ module.exports = (config) => {
   game_control.processed = (message) => {
     if (message in game_control) {
       game_control[message]()
+      return
+    }
+    if (message[0] === '?') {
+      message = message.substring(1).split(':')
+      let code = message.shift()
+      esp_action.inner(code, message)
       return
     }
     message = message.split(':');

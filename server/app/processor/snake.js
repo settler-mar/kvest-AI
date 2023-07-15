@@ -24,5 +24,4 @@ module.exports = function (code) {
   if (code.indexOf('hard_level') !== -1) {
     hard_level = parseInt(code.split('hard_level')[1]) || 0
   }
-  update_file()
 }
