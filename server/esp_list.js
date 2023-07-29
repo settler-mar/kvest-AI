@@ -19,13 +19,21 @@ module.exports = [
     }
   },
   {
-    'code': '_',
+    'code': 'snake',
     'name': 'Название игры',
     'status': {
+      'login_pre': {
+        'title': 'Пароль(прошлый)',
+        'type': 'text'
+      },
       'login': {
         'title': 'Пароль',
-        'type': 'status'
+        'type': 'text'
       },
+      'pass_ok': {
+        'title': 'Статус',
+        'type': 'status'
+      }
     }
   },
   {
@@ -39,6 +47,10 @@ module.exports = [
       },
       'foods': {
         'title': 'Еда',
+        'type': 'text'
+      },
+      'level_now': {
+        'title': 'Текущий уровней',
         'type': 'text'
       },
       'level': {

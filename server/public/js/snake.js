@@ -1,3 +1,112 @@
+var base_url = (location.protocol || 'http:') + '//' + location.hostname + (location.port != 80 ? ':' + location.port : '');
+var ws = false;
+var ws_timer = false;
+var animationEnd = 'webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend';
+var ws_error = 0
+var hard_level = 2
+var snake_interval = [300, 200, 100]
+
+document.addEventListener("DOMContentLoaded", function (event) {
+  ws_start();
+});
+
+var app = {}
+
+function set_active_screen(screen) {
+  active_screen = screen
+  document.body.setAttribute('screen', screen)
+}
+
+function ws_start() {
+  if (ws) {
+    ws.close();
+    ws.onclose = function () {
+    };
+    ws.onopen = function () {
+    };
+    ws.onerror = function () {
+    };
+    ws.onmessage = function () {
+    };
+    if (ws.terminate) ws.terminate()
+    console.log('kill ws')
+  }
+
+  ws = new WebSocket(base_url.replace('http', 'ws'))
+  clearInterval(ws_timer);
+  ws_timer = setInterval(ws_start, 2000);
+
+  ws.onopen = function () {
+    console.log('WebSocket Connect');
+    clearInterval(ws_timer);
+  };
+
+  ws.onerror = function (error) {
+    console.log('WebSocket Error ', error);
+    ws_error++
+    if (ws_error > 600) ws_error = 600
+    clearInterval(ws_timer);
+    ws_timer = setInterval(ws_start, 1000 + ws_error * 100);
+  };
+
+  ws.onclose = function () {
+    console.log('WebSocket connection closed');
+    ws_error++
+    if (ws_error > 600) ws_error = 600
+    clearInterval(ws_timer);
+    ws_timer = setInterval(ws_start, 1000 + ws_error * 100);
+  };
+
+  ws.onmessage = function (e) {
+    var data = e.data.split(':')
+    var key = data.shift()
+    data = data.join(':')
+    console.log(key, data)
+    if (typeof (app) !== 'undefined') {
+      if (key === 'time') {
+        app.time = data
+        return
+      }
+
+      console.log(key, data)
+
+      if (key === 'esp_list') {
+        app.esp_list = JSON.parse(data)
+        return
+      }
+
+      if (key === 'snake') {
+        let cmd = data.split(':')
+        if (cmd[0] === 'hard_level') {
+          hard_level = parseInt(cmd[1])
+          return
+        }
+        return
+      }
+
+      if (key === 'game') {
+        app.game = JSON.parse(data)
+        if (app.game['lang']) t_lang = app.game['lang']
+        return
+      }
+
+      if (key === 'game_time') {
+        app.game_time = data
+        return
+      }
+      if (key === 'status') {
+        app.status = JSON.parse(data)
+        return
+      }
+    }
+  }
+}
+
+function ws_send(key, data) {
+  let msg = '?snake:' + key + ':' + data
+  if (ws) ws.send(msg)
+}
+
 let box = 36;
 let score = 0;
 
@@ -63,10 +172,11 @@ let bg = {
 let active_screen = false
 
 let level = 0
+let max_level = 0
 const foot_map = [
   [[18, 4], [26, 6], [21, 16], [18, 5]],//0
-  [[18, 4], [26, 16],],//7
-  [[18, 4], [26, 16],],//7
+  // [[18, 4], [26, 16],],//7
+  // [[18, 4], [26, 16],],//7
   [[18, 4], [26, 16],],//7
 ]
 
@@ -235,9 +345,13 @@ canvas.addEventListener('mousedown', function (event) {
         video.currentTime = 0
         video.style.display = 'block'
         video.play()
-        active_screen = 'video'
+        set_active_screen('video')
+        ws_send('pass_ok', 1)
         setTimeout(reset_level, 5000, true)
       } else {
+        ws_send('login_pre', inputField.text)
+        ws_send('login', '')
+        ws_send('pass_ok', 0)
         inputField.text = ''
       }
       return;
@@ -250,9 +364,10 @@ canvas.addEventListener('mousedown', function (event) {
         inputField.text = inputField.text.slice(0, -1); // Обрезаем последний символ
         textWidth = ctx.measureText(inputField.text).width; // Измеряем ширину текста с многоточием
       }
-
+      ws_send('login', inputField.text)
     } else {
       inputField.text = inputField.text.substring(0, inputField.text.length - 1)
+      ws_send('login', inputField.text)
     }
   }
 })
@@ -311,7 +426,7 @@ function drawBg() {
   ctx.textAlign = 'right';
 
   ctx.beginPath();
-  console.log(display_size.y, 0)
+  // console.log(display_size.y, 0)
   for (let i = 0; i < display_size.h; i++) {
     ctx.fillText(i, margin.w * box - 13, margin.t * box + box * i + 10);
     if (i === 0) continue
@@ -392,7 +507,7 @@ function drawScaleImage(image, x, y, scale) {
 let next_move = 0;
 
 function drawGame() {
-  active_screen = 'game'
+  set_active_screen('game')
   drawBg()
 
   // ctx.drawImage(foodImg, (food.x + margin.w) * box, (food.y + margin.t) * box);
@@ -430,6 +545,7 @@ function drawGame() {
     first_eat = true
     energy = 1
     score++;
+    ws_send('foods', score)
     if (!foot_map[level][score]) {
       clearInterval(game);
       level++
@@ -446,47 +562,47 @@ function drawGame() {
 //  if (next_move < new Date().getTime()) {
 //    next_move = next_move + tact_render
 
-    if (snake[snake.length - 2].can_remove) snake.pop();
+  if (snake[snake.length - 2].can_remove) snake.pop();
 
 
-    if (dir === "left") snakeX -= 1;
-    if (dir === "right") snakeX += 1;
-    if (dir === "up") snakeY -= 1;
-    if (dir === "down") snakeY += 1;
+  if (dir === "left") snakeX -= 1;
+  if (dir === "right") snakeX += 1;
+  if (dir === "up") snakeY -= 1;
+  if (dir === "down") snakeY += 1;
 
 
-    if (snakeX < 0 || snakeX >= display_size.w
-      || snakeY < 0 || snakeY >= display_size.h) {
-      ctx.fillStyle = "white";
-      ctx.font = "50px Arial";
-      ctx.fillText('end', 500, 500);
-      clearInterval(game);
-      setTimeout(reset_level, 3000,)
-    }
+  if (snakeX < 0 || snakeX >= display_size.w
+    || snakeY < 0 || snakeY >= display_size.h) {
+    ctx.fillStyle = "white";
+    ctx.font = "50px Arial";
+    ctx.fillText('end', 500, 500);
+    clearInterval(game);
+    setTimeout(reset_level, 3000,)
+  }
 
-    let alpha_head = {
-      "left": 180,
-      "up": 270,
-      "right": 0,
-      "down": 90,
-    }[dir]
+  let alpha_head = {
+    "left": 180,
+    "up": 270,
+    "right": 0,
+    "down": 90,
+  }[dir]
 
-    let newHead = {
-      x: snakeX,
-      y: snakeY,
-      alpha: alpha_head,
-      can_remove: !first_eat
-    };
+  let newHead = {
+    x: snakeX,
+    y: snakeY,
+    alpha: alpha_head,
+    can_remove: !first_eat
+  };
 
-    eatTail(newHead, snake);
+  eatTail(newHead, snake);
 
-    snake.unshift(newHead);
+  snake.unshift(newHead);
 //  }
 }
 
 // Отрисовка меню
 function drawMenu() {
-  active_screen = 'menu'
+  set_active_screen('menu')
   // ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(ground, bg.pos.x, bg.pos.y);
 
@@ -527,10 +643,14 @@ const reset_level = function (go) {
   video.style.display = 'none'
   video.pause()
   canvas.classList.add('no_cursor')
-  if (game){
+  if (game) {
+    if (max_level < level) {
+      max_level = level
+      ws_send('level', level)
+    }
     clearInterval(game)
   }
-  next_move = new Date().getTime() + 200
+  next_move = new Date().getTime() + snake_interval[hard_level - 1]
   snake = [
     {x: 4, y: 4, alpha: 0, can_remove: true},
     {x: 3, y: 4, alpha: 0, can_remove: true},
@@ -540,8 +660,10 @@ const reset_level = function (go) {
   dir = 'right';
   first_eat = false
   score = 0
+  ws_send('foods', score)
   if (!foot_map[level] || (!go && all_level_done)) {
     all_level_done = true
+    setTimeout(ws_send, 500, 'finish', 1)
     canvas.classList.remove('no_cursor')
     game = setInterval(drawMenu, 100);
   } else {
@@ -549,7 +671,8 @@ const reset_level = function (go) {
       x: foot_map[level][score][0],
       y: foot_map[level][score][1],
     };
-    game = setInterval(drawGame, 200);
+    ws_send('level_now', level + 1)
+    game = setInterval(drawGame, snake_interval[hard_level - 1]);
   }
 }
 
@@ -602,7 +725,7 @@ const inputField = {
 };
 
 function drawKeyboard() {
-  active_screen = 'keyboard'
+  set_active_screen('keyboard')
   ctx.drawImage(ground, bg.pos.x, bg.pos.y);
 
 
@@ -666,3 +789,7 @@ function drawKeyboard() {
 game = setInterval(drawKeyboard, 50);
 
 setTimeout(ws_send, 500, 'hard_level', hard_level)
+setTimeout(ws_send, 500, 'pass_ok', 0)
+setTimeout(ws_send, 500, 'level', 0)
+setTimeout(ws_send, 500, 'foods', 0)
+setTimeout(ws_send, 500, 'finish', 0)

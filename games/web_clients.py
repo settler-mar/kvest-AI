@@ -5,6 +5,7 @@ from screeninfo import get_monitors
 import pyautogui
 from pynput import keyboard
 from ws_client import WebSocketClient
+import json
 
 pages = [
     ('http://127.0.0.1:8080/snake.html', 2),
@@ -33,7 +34,7 @@ class Display:
 
 
 class MouseControl:
-    mouse_display = 0  # номер экрана на котором мыш. усли -1 то эмитирует клавиатуру
+    mouse_display = -100  # номер экрана на котором мыш. усли -1 то эмитирует клавиатуру
     monitors = get_monitors()
 
     x_min, y_min = 100, 100
@@ -41,6 +42,7 @@ class MouseControl:
 
     def __init__(self):
         self.print_monitor_info()
+        self.default_display = pages[0][1] if pages[0][1] < len(self.monitors) else 0
         self.displays = [Display(url,
                                  self.monitors[display_number if display_number < len(self.monitors) else 0])
                          for url, display_number in pages]
@@ -48,7 +50,7 @@ class MouseControl:
 
         message_handlers = {
             "command": self.command,
-            # "game": print,
+            "status": self.status,
         }
 
         address = "ws://127.0.0.1:8080"
@@ -58,10 +60,16 @@ class MouseControl:
 
         self.client = client
 
+    def status(self, data):
+        status = json.loads(data)
+        if "snake" in status and "pass_ok" in status["snake"]:
+            if status["snake"]["pass_ok"] == "1":
+                self.set_pos(-1)
+            else:
+                self.set_pos(self.default_display)
+
     def reset(self):
-        if self.displays:
-            self.mouse_display = pages[0][1] if pages[0][1] < len(self.monitors) else 0
-        self.set_pos()
+        self.set_pos(self.default_display)
 
         [display.reload() for display in self.displays]
 
@@ -74,12 +82,18 @@ class MouseControl:
             print("Смещение по Y:", monitor.y)
             print()
 
-    def set_pos(self):
+    def set_pos(self, mouse_display=None):
+        if mouse_display is not None:
+            if self.mouse_display == mouse_display:
+                return
+            print('set_pos', mouse_display)
+            self.mouse_display = mouse_display
         if self.mouse_display == -1:
-            x_min = self.monitors[0].x + self.monitors[0].width / 2
-            y_min = self.monitors[0].y + self.monitors[0].height / 2
-            pyautogui.moveTo(x_min, y_min, duration=0.1)
+            self.x_min = self.monitors[0].x + self.monitors[0].width / 2
+            self.y_min = self.monitors[0].y + self.monitors[0].height / 2
+            pyautogui.moveTo(self.x_min, self.y_min, duration=0.1)
             return
+
         self.x_min = self.monitors[self.mouse_display].x
         self.y_min = self.monitors[self.mouse_display].y
         self.x_max = self.monitors[self.mouse_display].x + self.monitors[self.mouse_display].width
@@ -108,7 +122,7 @@ class MouseControl:
                     else:
                         pyautogui.keyDown('up')
                         pyautogui.keyUp('up')
-                print(dx, dy)
+                print(dx, dy, self.x_min, self.y_min)
             pyautogui.moveTo(self.x_min, self.y_min, duration=0.1)
             return
 
@@ -154,4 +168,5 @@ def main():
 
 
 if __name__ == '__main__':
+    pyautogui.FAILSAFE = False
     main()
