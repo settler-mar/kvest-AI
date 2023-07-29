@@ -1,5 +1,4 @@
 const colors = require('colors');
-const fs = require('fs')
 //const base_path = require('../../paths.js')['snake']
 let hard_level = 2
 

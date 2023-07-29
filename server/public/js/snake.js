@@ -18,6 +18,8 @@ function set_active_screen(screen) {
   ws_send('screen', screen)
 }
 
+let game_status = 0 // 0 - base game, 1 - locked, 2 - catalog
+
 function ws_start() {
   if (ws) {
     ws.close();
@@ -97,6 +99,13 @@ function ws_start() {
       }
       if (key === 'status') {
         app.status = JSON.parse(data)
+        if(app.status['logo'] && app.status['logo']['finish'] && game_status===0){
+          game_status = 1
+          if (game) {
+            clearInterval(game)
+          }
+          set_active_screen('locked')
+        }
         return
       }
     }
@@ -163,7 +172,7 @@ const ctx = canvas.getContext("2d");
 const ground = new Image();
 // ground.src = "img/ground.png";
 // ground.src = "img/bg.jpg";
-ground.src = "img/Fon.png";
+ground.src = "img/Fon2.jpg";
 let bg = {
   'pos': {'x': 0, 'y': 0},
   'go_pos': {'x': -300, 'y': -300},

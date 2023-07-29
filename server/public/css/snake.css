@@ -1,7 +1,8 @@
 body {
     margin: 0;
     background: #000;
-    cursor: url("/img/pngwing.png"), auto;;
+    cursor: url("/img/pngwing.png"), auto;
+    background: url(/img/blocked.jpg)  no-repeat center center fixed;
 }
 
 .wrap, video {
@@ -22,6 +23,11 @@ canvas {
     /*width: 100%;*/
 }
 
-body[screen="game"], body[screen="video"] {
+body[screen="game"], body[screen="video"], body[screen="locked"] {
     cursor: none;
+}
+
+body[screen="locked"] canvas,
+body[screen="locked"] video {
+    display: none;
 }
