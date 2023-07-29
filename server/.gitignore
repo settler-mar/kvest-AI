@@ -11,7 +11,7 @@ coverage/
 debianpkg/
 .postinst
 geo.mmdb
-public/css/index.css
+#public/css/index.css
 .idea
 package-lock.json
 *.zip

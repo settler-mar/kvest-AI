@@ -1,0 +1,167 @@
+@import "el";
+html, body {
+    font-family: 'Roboto', sans-serif;
+    font-size: 18px;
+    background: #132040;
+    color: #fff;
+    margin: 0;
+    padding: 0;
+}
+.main-wrap > * {
+    padding: 0 10px;
+}
+.main-wrap {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+.main {
+    flex-grow: 2;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+h1 {
+    margin: 0;
+}
+nav {
+    display: flex;
+    justify-content: space-between;
+    background: #070e1f;
+    padding: 10px 10px !important;
+}
+nav button {
+    width: 110px;
+    padding: 10px;
+    margin: -10px 0;
+    border-radius: 0;
+    outline: none;
+    background: #eee;
+    border: none;
+}
+nav select {
+    margin-left: 10px;
+}
+footer {
+    background: #070e1f;
+    padding: 10px 10px !important;
+}
+table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 1000px;
+    border: 1px solid;
+}
+thead {
+    border-bottom: 1px dashed;
+    background: #09152f;
+}
+td {
+    padding: 3px 5px;
+    transition: all 1s ease-out 3s;
+}
+tr {
+    transition: all 0.4s ease-out;
+}
+tbody tr:nth-child(2n) {
+    background: #041642;
+}
+tbody tr:hover {
+    background: #00298c;
+}
+tr.active {
+    background: #008c82 !important;
+}
+.carNumber {
+    height: 20px;
+}
+.car_full {
+    height: 40px;
+    margin-left: 20px;
+}
+.car-wrap {
+    display: flex;
+    justify-content: flex-end;
+}
+td img {
+    cursor: pointer;
+}
+.esp_status {
+    max-width: 300px;
+    text-align: center;
+}
+.device_line td {
+    padding: 0;
+    height: 0;
+    border-top: 2px dotted #fff;
+}
+.device_line td:nth-child(2n+1) {
+    padding: 0 10px;
+    max-width: 100px;
+}
+.device_line button {
+    width: 100%;
+    padding: 5px 10px;
+    margin: 1px;
+    cursor: pointer;
+    transition: all 0.6s;
+}
+.device_line button:hover {
+    background: #070e1f;
+    color: #fff;
+}
+.progress_wrap {
+    display: flex;
+}
+.progress_box {
+    border: 1px solid #fff;
+    flex-grow: 2;
+    padding: 1px;
+    margin: 0 0 0 5px;
+    position: relative;
+}
+.progress_el {
+    background: #fff;
+    height: 100%;
+    display: block;
+    transition: all 1s ease-out;
+}
+.el_status {
+    display: block;
+    height: 20px;
+    width: 20px;
+    border-radius: 100%;
+    border: 2px solid #fff;
+}
+.el_status_true, .el_status_1 {
+    background: #090;
+}
+.el_status_false, .el_status_0 {
+    background: #900;
+}
+.el_status_2 {
+    background: #999400;
+}
+.el_gloves {
+    position: relative;
+    height: 30px;
+    margin-right: 5px;
+}
+.el_gloves:before, .el_gloves:after {
+    position: absolute;
+    background: #243a73;
+    font-size: 12px;
+    right: -3px;
+    height: 12px;
+    width: 12px;
+    text-align: center;
+    border-radius: 100%;
+}
+.el_gloves:before {
+    content: attr(data-code);
+    bottom: 0;
+}
+.el_gloves:after {
+    content: attr(data-room);
+    bottom: 100%;
+}

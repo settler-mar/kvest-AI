@@ -17,6 +17,13 @@ class Display:
     def __init__(self, page, monitor):
         options = Options()
         options.add_experimental_option("excludeSwitches", ['enable-automation'])
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-web-security")
+        options.add_argument("--ignore-certificate-errors")
+        options.add_argument("--kiosk")
+        options.add_argument("--disable-password-manager-reauthentication")
+
         self.driver = webdriver.Chrome(options=options)
         self.driver.set_window_position(monitor.x, monitor.y + 50)
         self.driver.set_window_size(monitor.width, monitor.height)
@@ -36,6 +43,7 @@ class Display:
 class MouseControl:
     mouse_display = -100  # номер экрана на котором мыш. усли -1 то эмитирует клавиатуру
     monitors = get_monitors()
+    active_screen = None
 
     x_min, y_min = 100, 100
     x_max, y_max = 500, 500
@@ -63,10 +71,10 @@ class MouseControl:
     def status(self, data):
         status = json.loads(data)
         if "snake" in status and "pass_ok" in status["snake"]:
-            if status["snake"]["pass_ok"] == "1":
-                self.set_pos(-1)
-            else:
-                self.set_pos(self.default_display)
+            if self.active_screen != status["snake"]["screen"]:
+                self.active_screen = status["snake"]["screen"]
+
+                self.set_pos(-1 if self.active_screen in ['video', 'game'] else self.default_display)
 
     def reset(self):
         self.set_pos(self.default_display)
@@ -137,7 +145,7 @@ class MouseControl:
             y = self.y_max
 
         # Перемещаем курсор в ограниченные координаты
-        pyautogui.moveTo(x, y, duration=0.1)
+        pyautogui.moveTo(x, y, duration=0)
 
     def command(self, data):
         if data == 'reset':

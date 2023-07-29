@@ -45,6 +45,10 @@ module.exports = [
         'type': 'select',
         'list': [1, 2, 3]
       },
+      'screen': {
+        'title': 'Экран',
+        'type': 'text'
+      },
       'foods': {
         'title': 'Еда',
         'type': 'text'

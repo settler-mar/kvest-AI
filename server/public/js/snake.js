@@ -15,6 +15,7 @@ var app = {}
 function set_active_screen(screen) {
   active_screen = screen
   document.body.setAttribute('screen', screen)
+  ws_send('screen', screen)
 }
 
 function ws_start() {
