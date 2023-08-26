@@ -3,25 +3,11 @@
 Created on Thu Jun 22 16:44:27 2017
 @author: sakurai
 """
-import numpy as np
-import cv2
-import screeninfo
-from PIL import ImageFont, Image, ImageDraw
-import random
-from math import *
-from datetime import datetime, timedelta
-from cvzone.HandTrackingModule import HandDetector
-import pyautogui
-import threading
-from time import sleep
-from http.server import BaseHTTPRequestHandler, HTTPServer
-import re
-import requests
-from controls import *
+from common.controls import *
 
-H = 780
-W = 1240
-cams_hand_control = True
+# H = 780
+# W = 1240
+cams_hand_control = False
 
 
 def init_cam(c):
@@ -49,14 +35,14 @@ for conf in f.read().split("\n"):
         hand_cam = Camera(None, [init_cam(c) for c in conf.split(" ")], True)
         hand_cam.handControl(False)
 
-timer = Timer((538, 1620), text="", fontFile='CodenameCoderFree4F-Bold.ttf', fontSize=200, color=(255, 0, 0),
+timer = Timer((538, 1620), text="", fontFile='fonts/CodenameCoderFree4F-Bold.ttf', fontSize=200, color=(255, 0, 0),
               align=1)
 timer.setTime("60:00")
-txt_wrong = Text((538, 115), text="ОБНАРУЖЕНО\nВТОРЖЕНИЕ", fontFile='Batman_Forever_Alternate_Cyr.ttf',
+txt_wrong = Text((538, 115), text="ОБНАРУЖЕНО\nВТОРЖЕНИЕ", fontFile='fonts/Batman_Forever_Alternate_Cyr.ttf',
                  fontSize=100,
                  color=(255, 0, 0), align=1)
 
-txt_msg = Text((270, 1550), text="Копирование файлов\nна удаленный сервер", fontFile='Bicubik.ttf',
+txt_msg = Text((270, 1550), text="Копирование файлов\nна удаленный сервер", fontFile='fonts/Bicubik.ttf',
                fontSize=30, color=(255, 255, 255), align=0, line_height=1.5)
 
 
@@ -81,7 +67,7 @@ def main():
     screen = screeninfo.get_monitors()[min(screen_cnt - 1, screen_id)]
     width = int(screen.width / 2)
     # image_r = read_transparent_png("timer_bg.png")
-    image_r = cv2.imread("timer_bg.png")
+    image_r = cv2.imread("img/timer_bg.png")
     img_h, img_w, _ = image_r.shape
     print('timer_bg size', image_r.shape)
     height = int(width * img_h / img_w)
@@ -92,8 +78,8 @@ def main():
     cv2.moveWindow(window_name, screen.x - 1, screen.y - 1)
     cv2.resizeWindow(window_name, width, height)
 
-    if cams_hand_control:
-        create_capture_windows()
+    # if cams_hand_control:
+    create_capture_windows()
 
     # cv2.namedWindow(window_name, cv2.WND_PROP_FULLSCREEN)
     # cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
@@ -101,7 +87,7 @@ def main():
     # cams[1].handControl(True)
     circles = Circles((30, 1038))
     while 1:
-        im = Image.open("timer_bg.png")
+        im = Image.open("img/timer_bg.png")
         draw = ImageDraw.Draw(im)
 
         for cam in cams:

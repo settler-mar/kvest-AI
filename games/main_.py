@@ -1,13 +1,13 @@
-import time
 import sys
 import pygame
-from CursorClass import HandCursor, MouseCursor
+from typing import List, Tuple
+# from common.CursorClass import HandCursor, MouseCursor
 import cv2
-import numpy as np
 from math import *
+from pygame import gfxdraw
+import random
+from time import time
 
-H = 780
-W = 1240
 on_config = False
 
 
@@ -29,7 +29,7 @@ def convert_opencv_img_to_pygame(opencv_image):
     return pygame_image
 
 
-def draw_text(text, x, y, color=(0, 0, 0), size=12, font_name=None, align="nw"):
+def draw_text(sc, text, x, y, color=(200, 100, 200), size=12, font_name=None, align="nw"):
     font = pygame.font.Font(font_name or pygame.font.get_default_font(), size)
     text_surface = font.render(str(text), True, color)
     text_rect = text_surface.get_rect()
@@ -54,9 +54,131 @@ def draw_text(text, x, y, color=(0, 0, 0), size=12, font_name=None, align="nw"):
     sc.blit(text_surface, text_rect)
 
 
+# точка пересечения двух отрезков
+def cross(line0: List[List[float]], line1: List[List[float]]) -> Tuple[float, float]:
+    x0_0, y0_0 = line0[0]
+    x0_1, y0_1 = line0[1]
+    x1_0, y1_0 = line1[0]
+    x1_1, y1_1 = line1[1]
+
+    d = (x0_1 - x0_0) * (y1_1 - y1_0) - (x1_1 - x1_0) * (y0_1 - y0_0)
+    if d == 0:
+        return  # отрезки параллельны
+
+    t = ((x1_0 - x0_0) * (y1_1 - y1_0) - (y1_0 - y0_0) * (x1_1 - x1_0)) / d
+    u = -((x0_0 - x1_0) * (y0_1 - y0_0) - (y0_0 - y1_0) * (x0_1 - x0_0)) / d
+
+    if 0 <= t <= 1 and 0 <= u <= 1:
+        x = x0_0 + t * (x0_1 - x0_0)
+        y = y0_0 + t * (y0_1 - y0_0)
+        return x, y
+
+    return  # отрезки не пересекаются
+
+
+class Starfield:
+    count = 2000
+
+    def __init__(self, screen):
+        self.screen = screen
+        self.stars = []
+        self.angle = 0
+        w = self.screen.get_width()
+        h = self.screen.get_height()
+        cx = w
+        cy = h
+        r_min = int(sqrt((cx - w) ** 2 + (cy - h) ** 2)) + 120
+        r_max = int(sqrt((cx - 0) ** 2 + (cy - 0) ** 2))
+        print(r_min, r_max)
+        for i in range(self.count):
+            self.stars.append([
+                cx + random.randrange(-50, 50),  # x
+                cy + random.randrange(-50, 50),  # y
+                1 / random.randrange(10, 20),  # speed
+                random.randrange(1, 3),  # size
+                random.randint(r_min, r_max),  # r
+                random.randint(0, 360),  # angle
+                random.randint(160, 230)  # color
+            ])
+
+    def draw(self):
+        for i, star in enumerate(self.stars):
+            x, y, speed, size, r, angle, color = star
+            star[5] = (angle - speed) % 360
+
+            gfxdraw.filled_circle(self.screen,
+                                  int(x + r * sin(radians(angle))),
+                                  int(y + r * cos(radians(angle))),
+                                  int(size),
+                                  (color, color, color))
+            # gfxdraw.aacircle(self.screen,
+            #                  int(x + r * sin(radians(angle))),
+            #                  int(y + r * cos(radians(angle))),
+            #                  int(size * 2),
+            #                  (color, color, color, 100))
+            gfxdraw.filled_circle(self.screen,
+                                  int(x + r * sin(radians(angle))),
+                                  int(y + r * cos(radians(angle))),
+                                  int(size * 3),
+                                  (color, color, color, 30))
+
+
+class SpriteAnimation:
+
+    def __init__(self, filename, width, height, frames_count, frame_start, origin_x, origin_y, frames_per_row,
+                 frames_per_col, current_frame=0, fps=25):
+        self.frames_count = frames_count  # количество кадров в анимации
+        self.current_frame = current_frame  # текущий кадр
+        self.frame_start = frame_start  # начальный кадр анимации (например, если анимация начинается с 5 кадра)
+        self.image = pygame.image.load(filename)
+        self.width = width  # размеры кадра
+        self.height = height  # размеры кадра
+        self.origin_x = origin_x  # точка отсчета для поворота
+        self.origin_y = origin_y  # точка отсчета для поворота
+        self.angle = 0
+        self.frames_per_row = frames_per_row
+        self.frames_per_col = frames_per_col
+
+        self.fps = fps
+        self.last_frame_time = 0
+
+    def draw(self, screen, x, y, angle):
+        frame_x = ((self.current_frame + self.frame_start) % self.frames_per_row) * self.width
+        frame_y = ((self.current_frame + self.frame_start) // self.frames_per_row) * self.height
+
+        frame_rect = pygame.Rect(frame_x, frame_y, self.width, self.height)
+
+        image = self.image.subsurface(frame_rect)
+
+        # поворачиваем изображение
+        rotated_img = pygame.transform.rotate(image, angle)
+
+        # определяем прямоугольник отрисовки
+        w, h = rotated_img.get_size()
+        draw_x = x - w / 2 + self.origin_x
+        draw_y = y - h / 2 + self.origin_y
+
+        # отрисовываем
+        screen.blit(rotated_img, (draw_x, draw_y))
+
+        pygame.draw.line(screen, (255, 255, 0), [draw_x, draw_y], [draw_x + w, draw_y + h], 2)
+        pygame.draw.line(screen, (255, 255, 0), [draw_x, draw_y + h], [draw_x + w, draw_y], 2)
+
+    def update(self, ):
+        current_time = time()
+        time_since_last_frame = current_time - self.last_frame_time
+
+        if time_since_last_frame > 1.0 / self.fps:
+            self.current_frame += 1
+            if self.current_frame >= self.frames_count:
+                self.current_frame = 0
+
+            self.last_frame_time = current_time
+
+
 class Sputnik:
-    size = 50
-    power: int
+    size = 50  # размер зеркала спутника
+    power: int  # мощность спутника (длина луча)
     is_hover = 0
     active = False
     angle = 90
@@ -82,36 +204,16 @@ class Sputnik:
     def take(self):
         self.angle = self.angle_extr[0]
 
-    def draw(self):
-        if self.active:
-            x, y = cursor.position
-            x = int(x * W)
-            y = int(y * H)
-            if self.is_hover and cursor.isDown:
-                hover = 2
-                dx = self.click_pos[0] - x - self.click_pos[1] + y
-                if dx != 0:
-                    d = log(abs(dx)) / 10
-                    if d > self.speed:
-                        d = self.speed
-                    if dx < 0:
-                        self.angle -= d
-                    else:
-                        self.angle += d
-                    if self.angle > self.angle_extr[1]:
-                        self.angle = self.angle_extr[1]
+    def rotate(self, d):
+        self.angle += d
+        if self.angle > self.angle_extr[1]:
+            self.angle = self.angle_extr[1]
+        if self.angle < self.angle_extr[0]:
+            self.angle = self.angle_extr[0]
 
-                    if self.angle < self.angle_extr[0]:
-                        self.angle = self.angle_extr[0]
-            else:
-                hover = abs(x - self.x) < self.size and abs(y - self.y) < self.size
-                if hover and self.can_active and (self.is_hover == 0) and cursor.isDown:
-                    hover = 2
-                    self.click_pos = (x, y)
-                    self.is_hover = 1
-                else:
-                    self.is_hover = 0
-                    self.can_active = not cursor.isDown and hover
+    def draw(self, sc):
+        if self.active:
+            hover = self.is_hover
         else:
             hover = 3
             if self.angle != self.angle_def:
@@ -124,146 +226,144 @@ class Sputnik:
                             [[self.x - self.size, self.y - self.size], [self.x - self.size, self.y + self.size],
                              [self.x + self.size, self.y + self.size], [self.x + self.size, self.y - self.size]],
                             width=5)
-        draw_text(self.angle, self.x - self.size, self.y + self.size)
+        draw_text(sc, self.angle, self.x - self.size, self.y + self.size)
 
         a = radians(self.angle)
         dx = self.size * sin(a)
         dy = self.size * cos(a)
         self.line_pos = ([self.x + dx, self.y + dy], [self.x - dx, self.y - dy])
-        pygame.draw.line(sc, (0, 0, 0), self.line_pos[0], self.line_pos[1], 3)
+        pygame.draw.line(sc, (100, 100, 100), self.line_pos[0], self.line_pos[1], 3)
         pygame.draw.line(sc, (50, 50, 50), [self.x, self.y], [self.x + dy * 2, self.y - dx * 2], 3)
 
 
-def draw_cursor():
-    if cursor.isDown:
-        draw_text('is down', 20, 20, (0, 0, 200))
-        for sputnik in sputniks:
-            if sputnik.is_hover:
-                return
-    # rot = pygame.transform.rotate(cursor_img, cursor_alpha)
-    # rot_rect = rot.get_rect(center=(32, 32), bottomright=cursor.position)
-    # sc.blit(rot, rot_rect)
-    x, y = cursor.position
+class GameClass:
+    H = 780
+    W = 1240
+    sputniks = [
+        Sputnik(.65, .75, angle=140),
+        Sputnik(.38, .77, angle=63),
+        Sputnik(.14, .51, angle=5),
+        Sputnik(.24, .14, angle=307),
+        Sputnik(.55, .03, angle=261),
+        Sputnik(.79, .24, angle=221),
+        Sputnik(.88, .6, angle=111),
+    ]
+    select_sputnik = 0
 
-    # cursor_rect = cursor_img.get_rect(bottomright=cursor.position)
-    x = int(x * W)
-    y = int(y * H)
-    pygame.draw.line(sc, (0, 0, 0), [x - 32, y], [x - 12, y], 3)
-    pygame.draw.line(sc, (0, 0, 0), [x, y - 30], [x, y - 10], 3)
-    pygame.draw.line(sc, (0, 0, 0), [x + 12, y], [x + 32, y], 3)
-    pygame.draw.line(sc, (0, 0, 0), [x, y + 12], [x, y + 32], 3)
-    pygame.draw.circle(sc, (0, 0, 0), (x, y), 25, 3)
+    def __init__(self):
+        self.sputniks[0].active = True
+        self.change_sputnik(0)
 
-    # sc.blit(cursor_img, cursor_rect)
+        # cursor = [MouseCursor, HandCursor][0]()
+        self.sc = pygame.display.set_mode((self.W, self.H), pygame.NOFRAME)
+        # cursor_img = pygame.image.load('img/cursor2.png')
+        pygame.mouse.set_visible(False)
+        pygame.font.init()
 
+    def draw_laser(self, is_user=False):
+        color = [(200, 10, 10), (10, 200, 10)][is_user]
+        i = 0 if is_user else -1
+        a = radians(self.sputniks[i].angle)
+        p0 = [[self.sputniks[i].x, self.sputniks[i].y],
+              [self.sputniks[i].x + self.sputniks[i].power * cos(a),
+               self.sputniks[i].y - self.sputniks[i].power * sin(a)]]
+        has_take = False
+        for sputnik in self.sputniks[1:None if is_user else -1][::None if is_user else -1]:
+            if has_take:
+                break
+            p = cross(p0, sputnik.line_pos)
+            if p:
+                p0[1] = p
+                if not on_config:
+                    if sputnik.active != is_user:
+                        sputnik.set_active(is_user)
+                        has_take = True
+            pygame.draw.line(self.sc, color, p0[0], p0[1], 3)
 
-def cross(x1_1, y1_1, x1_2, y1_2, x2_1, y2_1, x2_2, y2_2):
-    A1 = y1_1 - y1_2
-    B1 = x1_2 - x1_1
-    C1 = x1_1 * y1_2 - x1_2 * y1_1
-    A2 = y2_1 - y2_2
-    B2 = x2_2 - x2_1
-    C2 = x2_1 * y2_2 - x2_2 * y2_1
+            if not p:
+                break
+            if has_take:
+                continue
 
-    if B1 * A2 - B2 * A1 and A1:
-        y = (C2 * A1 - C1 * A2) / (B1 * A2 - B2 * A1)
-        x = (-C1 - B1 * y) / A1
-        if all([x > min(x1_1, x1_2) and x < max(x1_1, x1_2) and y > min(y1_1, y1_2) and y < max(y1_1, y1_2),
-                x > min(x2_1, x2_2) and x < max(x2_1, x2_2) and y > min(y2_1, y2_2) and y < max(y2_1, y2_2)]):
-            return [x, y]
-    elif B1 * A2 - B2 * A1 and A2:
-        y = (C2 * A1 - C1 * A2) / (B1 * A2 - B2 * A1)
-        x = (-C2 - B2 * y) / A2
-        if all([x > min(x1_1, x1_2) and x < max(x1_1, x1_2) and y > min(y1_1, y1_2) and y < max(y1_1, y1_2),
-                x > min(x2_1, x2_2) and x < max(x2_1, x2_2) and y > min(y2_1, y2_2) and y < max(y2_1, y2_2)]):
-            return [x, y]
+            angle = degrees(atan2((p0[1][0] - p0[0][0]), (p0[1][1] - p0[0][1]))) + 90
+            angle = sputnik.angle * 2 - angle
 
-
-def draw_laser(is_user=False):
-    color = [(200, 10, 10), (10, 200, 10)][is_user]
-    i = 0 if is_user else -1
-    a = radians(sputniks[i].angle)
-    p0 = [[sputniks[i].x, sputniks[i].y],
-          [sputniks[i].x + sputniks[i].power * cos(a), sputniks[i].y - sputniks[i].power * sin(a)]]
-    has_take = False
-    for sputnik in sputniks[1:None if is_user else -1][::None if is_user else -1]:
+            a = radians(angle)
+            p0 = [p, [p[0] + sputnik.power * cos(a), p[1] - sputnik.power * sin(a)]]
         if has_take:
-            break
-        p = cross(*p0[0], *p0[1], *sputnik.line_pos[0], *sputnik.line_pos[1])
-        if p:
-            p0[1] = p
-            if not on_config:
-                if sputnik.active != is_user:
-                    sputnik.set_active(is_user)
-                    has_take = True
-        pygame.draw.line(sc, color, p0[0], p0[1], 3)
+            sputnik.take()
+            return True
 
-        if not p or p0[0][1] == p0[1][1]:
-            break
-        if has_take:
-            continue
+    def change_sputnik(self, i):  # 1 - next, -1 - prev
+        self.select_sputnik += i
+        if self.select_sputnik < 0:
+            for index, sputnik in enumerate(self.sputniks):
+                if not sputnik.active:
+                    break
+                self.select_sputnik = index
+        elif self.select_sputnik >= len(self.sputniks):
+            self.select_sputnik = 0
+        elif not self.sputniks[self.select_sputnik].active:
+            self.select_sputnik = 0
 
-        angle = degrees(atan((p0[1][0] - p0[0][0]) / (p0[1][1] - p0[0][1]))) - 90
-        if p0[0][1] < p0[1][1]:
-            angle += 180
-        angle = sputnik.angle * 2 - angle
+        for index, sputnik in enumerate(self.sputniks):
+            sputnik.is_hover = index == self.select_sputnik
+        print(self.select_sputnik)
 
-        a = radians(angle)
-        p0 = [p, [p[0] + sputnik.power * cos(a), p[1] - sputnik.power * sin(a)]]
-    if has_take:
-        sputnik.take()
+    def rotate_sputnik(self, angle):
+        self.sputniks[self.select_sputnik].rotate(angle)
 
+    def game(self):
+        starfield = Starfield(self.sc)
+        sprite = SpriteAnimation("img/sprite_sat4.png", width=850/4, height=630/4, origin_x=200, origin_y=320,
+                                 frames_count=6, frame_start=0, frames_per_col=2, frames_per_row=4)
+        sprite.current_frame = 3
+        while 1:
+            self.sc.fill((0, 0, 0))
+            starfield.draw()
 
-def draw_cam():
-    # рисуем картинку с камеры
-    if cursor.camImg is None:
-        return
-    scale_percent = 20  # percent of original size
-    width = int(cursor.camImg.shape[1] * scale_percent / 100)
-    height = int(cursor.camImg.shape[0] * scale_percent / 100)
-    dim = (width, height)
-    cam_image = cv2.resize(cursor.camImg, dim, interpolation=cv2.INTER_AREA)
+            sprite.update()
+            sprite.draw(self.sc,
+                        # self.sputniks[0].x,
+                        # self.sputniks[0].y,
+                        100, 100,
+                        self.sputniks[0].angle)
+            pygame.draw.line(self.sc, (100, 0, 0), [95, 95], [105, 105], 2)
+            pygame.draw.line(self.sc, (100, 0, 0), [95, 105], [105, 95], 2)
 
-    cam_image = convert_opencv_img_to_pygame(cam_image)
-    sc.blit(cam_image, (W - width, H - height))
+            # cursor.update()
 
+            # draw_cursor()
+            # draw_cam()
 
-cursor = [MouseCursor, HandCursor][1]()
-sc = pygame.display.set_mode((W, H), pygame.NOFRAME)
-cursor_img = pygame.image.load('cursor2.png')
-pygame.mouse.set_visible(False)
-pygame.font.init()
+            for sputnik in self.sputniks:
+                sputnik.draw(self.sc)
+            if self.draw_laser():
+                if self.sputniks[self.select_sputnik].is_hover:
+                    self.change_sputnik(-1)
+            self.draw_laser(True)
 
-sputniks = [
-    Sputnik(.65, .75, active=True, angle=140),
-    Sputnik(.38, .77, angle=85),
-    Sputnik(.14, .51, angle=12),
-    Sputnik(.24, .14, angle=307),
-    Sputnik(.55, .03, angle=261),
-    Sputnik(.79, .24, angle=221),
-    Sputnik(.88, .6, angle=111),
-]
+            pygame.display.update()
+            for i in pygame.event.get():
+                if i.type == pygame.QUIT:
+                    sys.exit()
+                if i.type == pygame.KEYDOWN:
+                    if i.key == pygame.K_ESCAPE:
+                        sys.exit()
+                    if i.key == pygame.K_LEFT:
+                        self.change_sputnik(-1)
+                    if i.key == pygame.K_RIGHT:
+                        self.change_sputnik(1)
+                    if i.key == pygame.K_UP:
+                        self.rotate_sputnik(1)
+                    if i.key == pygame.K_DOWN:
+                        self.rotate_sputnik(-1)
+
+            pygame.time.delay(20)
 
 
 def main():
-    while 1:
-        sc.fill((100, 150, 200))  # залить фон
-        cursor.update()
-
-        draw_cursor()
-        draw_cam()
-
-        for sputnik in sputniks:
-            sputnik.draw()
-        draw_laser()
-        draw_laser(True)
-
-        pygame.display.update()
-        for i in pygame.event.get():
-            if i.type == pygame.QUIT:
-                sys.exit()
-
-        pygame.time.delay(20)
+    GameClass().game()
 
 
 if __name__ == '__main__':
