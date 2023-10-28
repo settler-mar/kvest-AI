@@ -13,3 +13,5 @@ pynput
 selenium
 pynput
 websocket-client
+msvc-runtime
+websockets

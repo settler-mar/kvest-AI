@@ -11,12 +11,18 @@ from common.handTracker import handTracker
 from common.ws_client import WebSocketClient
 from time import sleep
 from threading import Thread
+import json
 
 on_config = False
 print_pos = False
 
 
 # https://github.com/fandhikazhr/handDetector
+# Для винды
+# Install Visual C++ Build Tools 2019 and WinSDK
+# Go to the VisualStudio website, download build tools, and install Microsoft Visual C++ 2019 Redistributable and Microsoft Build Tools 2019.
+# https://visualstudio.microsoft.com/ru/visual-cpp-build-tools/
+# https://github.com/protocolbuffers/protobuf/releases
 
 def get_opencv_img_res(opencv_image):
     height, width = opencv_image.shape[:2]
@@ -379,6 +385,8 @@ class GameClass:
         self.in_range = -1
 
     def active_control(self):
+        if self.hand_control == 1:
+            return
         self.change_sputnik(0)
         self.hand_control = 1
 
@@ -594,7 +602,7 @@ class MainClass:
     def __init__(self):
         message_handlers = {
             "command": self.command,
-            # "status": status,
+            "status": self.status,
         }
         address = "ws://127.0.0.1:8080"
 
@@ -608,11 +616,14 @@ class MainClass:
             self.game = GameClass(self.client)
         self.game.reset()
         Thread(target=self.game.game).start()
+
     def command(self, message):
         if message == 'restart':
             self.restart_game()
 
-        if message == 'pause':
+    def status(self, data):
+        status = json.loads(data)
+        if 'finish_4' in status.get('hackDevice', {}):
             self.game and self.game.active_control()
 
     def run(self):

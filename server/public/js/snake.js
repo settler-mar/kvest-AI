@@ -117,7 +117,7 @@ function ws_send(key, data) {
   if (ws) ws.send(msg)
 }
 
-let box = 36;
+let box = 42;
 let score = 0;
 
 let first_eat = false;
