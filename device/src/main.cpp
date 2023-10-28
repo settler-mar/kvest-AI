@@ -53,6 +53,7 @@ void updateLg();
 #include "air.h"
 #include "codes.h"
 #include "gloves.h"
+#include "satellite.h"
 
 
 void updateLg() { // отправить на дисплей язык
@@ -197,7 +198,12 @@ void processed_serial() {
     }
     }else if(game==2){
         serialCodes();
+    }else if(game==3){
+        // serialGloves();
+    }else if(game==4){
+        serialSatellite();
     }
+
   if (Buffer[4] == 0X00) {  // Принимаем ситемные данные
     if (Buffer[5] == 0X82) {
 
@@ -350,6 +356,7 @@ void loop() {
             if(game==1)go_to_page(26);
             if(game==2)updateCode();
             if(game==3)gloves_clear();
+            if(game==4)go_to_page(30);
           }
         }else{
           timer_to_game = 20;
@@ -360,6 +367,7 @@ void loop() {
       if (game == 1) checkResultAir();
       if (game == 2) codesLoop();
       if (game == 3) glovesLoop();
+      if (game == 4) satelliteLoop();
     }
   }
 }
