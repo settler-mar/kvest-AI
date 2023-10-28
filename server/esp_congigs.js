@@ -61,5 +61,11 @@ module.exports = [
     'name': 'Змейка',
     'has_lang': true,
     'send': require("./app/processor/snake.js"),
+  },
+  {
+    'code': 'satellite',
+    'name': 'Спутники',
+    'has_lang': false,
+    'send': require("./app/processor/satellite.js"),
   }
 ];

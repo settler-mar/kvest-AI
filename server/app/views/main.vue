@@ -28,6 +28,7 @@
           <option value="1">Вентиляция</option>
           <option value="2">Взлом двери</option>
           <option value="3">Перчатки</option>
+          <option value="4">Активация спутников</option>
         </select>
       </div>
       <span>{{ time }}</span>

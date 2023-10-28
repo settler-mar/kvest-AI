@@ -145,25 +145,33 @@ module.exports = [
     }
   },
   {
-    'code': 'timer',
-    'name': 'Управление спутниками',
-    'status': {
-      'hand': {
-        'title': '',
-        'type': 'status',
-      },
-    },
+    'code': 'hackDevice',
+    'name': 'Активация спутников',
     'commands': {
-      'hand/0': 'Отключить',
-      'hand/1': 'Включить',
+      // 'reset': 'Сброс',
+      // 'start': 'Начать задание',
     },
+    'status': {
+      'finish_4': {
+        'title': 'задача окончена',
+        'type': 'status'
+      }
+    }
   },
   {
-    'code': '_',
+    'code': 'satellite',
     'name': 'Спутники',
     'status': {
-      'start': {
+      'take': {
         'title': 'Захваченно спутников',
+        'type': 'text'
+      },
+      'active': {
+        'title': 'Активированный спутник',
+        'type': 'text'
+      },
+      'in_range': {
+        'title': 'Спутников с сигналом',
         'type': 'text'
       },
     }
@@ -204,6 +212,7 @@ module.exports = [
   },
   {
     'code': 'hackDevice',
+    'name': "Перчатки",
     'commands': {
       // 'reset': 'Сброс',
       // 'start': 'Начать задание',

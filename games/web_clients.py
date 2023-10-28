@@ -4,7 +4,7 @@ from time import sleep
 from screeninfo import get_monitors
 import pyautogui
 from pynput import keyboard
-from ws_client import WebSocketClient
+from common.ws_client import WebSocketClient
 import json
 
 pages = [
