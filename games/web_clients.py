@@ -1,5 +1,7 @@
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 from time import sleep
 from screeninfo import get_monitors
 import pyautogui
@@ -8,23 +10,25 @@ from common.ws_client import WebSocketClient
 import json
 
 pages = [
-    ('http://127.0.0.1:8080/snake.html', 2),
-    # ('http://127.0.0.1:8080/video.html', 2),
+    ('http://127.0.0.1:8080/snake.html', 2, True),
+    ('http://127.0.0.1:8080/video.html', 1),
 ]
 
 
 class Display:
-    def __init__(self, page, monitor):
+    def __init__(self, page, monitor, is_kiosk: bool = False):
         options = Options()
         options.add_experimental_option("excludeSwitches", ['enable-automation'])
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
         options.add_argument("--disable-web-security")
         options.add_argument("--ignore-certificate-errors")
-        options.add_argument("--kiosk")
+        if is_kiosk:
+            options.add_argument("--kiosk")
         options.add_argument("--disable-password-manager-reauthentication")
 
-        self.driver = webdriver.Chrome(options=options)
+        service = Service(ChromeDriverManager().install())
+        self.driver = webdriver.Chrome(options=options, service=service)
         self.driver.set_window_position(monitor.x, monitor.y + 50)
         self.driver.set_window_size(monitor.width, monitor.height)
         # self.driver.maximize_window()
@@ -52,8 +56,9 @@ class MouseControl:
         self.print_monitor_info()
         self.default_display = pages[0][1] if pages[0][1] < len(self.monitors) else 0
         self.displays = [Display(url,
-                                 self.monitors[display_number if display_number < len(self.monitors) else 0])
-                         for url, display_number in pages]
+                                 self.monitors[display_number if display_number < len(self.monitors) else 0],
+                                 *args)
+                         for url, display_number, *args in pages]
         self.reset()
 
         message_handlers = {
