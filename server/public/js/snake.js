@@ -99,7 +99,7 @@ function ws_start() {
       }
       if (key === 'status') {
         app.status = JSON.parse(data)
-        if(app.status['logo'] && app.status['logo']['finish'] && game_status===0){
+        if (app.status['logo'] && app.status['logo']['finish'] && game_status === 0) {
           game_status = 1
           if (game) {
             clearInterval(game)
@@ -113,6 +113,7 @@ function ws_start() {
 }
 
 function ws_send(key, data) {
+  if (ws.readyState !== 1) return
   let msg = '?snake:' + key + ':' + data
   if (ws) ws.send(msg)
 }
@@ -184,10 +185,10 @@ let active_screen = false
 let level = 0
 let max_level = 0
 const foot_map = [
-  [[18, 4], [26, 6], [21, 16], [18, 5]],//0
-  // [[18, 4], [26, 16],],//7
-  // [[18, 4], [26, 16],],//7
-  [[18, 4], [26, 16],],//7
+  [[15, 3], [25, 6], [21, 18], [15, 15], [15, 4]],//0
+  [[15, 3], [25, 6], [20, 10], [15, 15], [25, 18]],//2
+  [[25, 3], [15, 5], [19, 10], [25, 15], [15, 18]],//5
+  [[15, 6], [20, 3], [25, 8], [25, 18]],//7
 ]
 
 const foodImg = new Image();
@@ -437,16 +438,16 @@ function drawBg() {
 
   ctx.beginPath();
   // console.log(display_size.y, 0)
-  for (let i = 0; i < display_size.h; i++) {
-    ctx.fillText(i, margin.w * box - 13, margin.t * box + box * i + 10);
-    if (i === 0) continue
+  for (let i = 1; i < display_size.h; i++) {
+    // ctx.fillText(i, margin.w * box - 13, margin.t * box + box * i + 10);
+    // if (i === 0) continue
 
     ctx.moveTo(margin.w * box, margin.t * box + box * i);
     ctx.lineTo(margin.w * box + display_size.w * box, margin.t * box + box * i);
   }
-  for (let i = 0; i < display_size.w; i++) {
-    ctx.fillText(i, margin.w * box + box * i + 10, margin.w * box - 13, margin.t * box + box * i);
-    if (i === 0) continue
+  for (let i = 1; i < display_size.w; i++) {
+    // ctx.fillText(i, margin.w * box + box * i + 10, margin.w * box - 13, margin.t * box + box * i);
+    // if (i === 0) continue
     ctx.moveTo(margin.w * box + box * i, margin.t * box);
     ctx.lineTo(margin.w * box + box * i, margin.t * box + display_size.h * box);
   }
@@ -516,6 +517,75 @@ function drawScaleImage(image, x, y, scale) {
 
 let next_move = 0;
 
+function drawDynamicIndication() {
+  let pos = {x: box * 2, y: box * 1.5, w: box * display_size.w}
+  // ctx.fillStyle = "white";
+  // ctx.textBaseline = 'bottom';
+  // ctx.textAlign = 'left';
+  // ctx.font = "50px batman";
+  // ctx.fillText('score', box * 2, box * 1.5);
+
+  // ctx.beginPath();
+  // ctx.rect(20, 20, 150, 100);
+  // ctx.stroke();
+
+  let ts = Math.floor(new Date().getTime() / 500) / 3;
+  for (let i = 0; i < 25; i++) {
+    ctx.beginPath();
+    let h = Math.abs(Math.sin(ts + i * 0.5) * 0.5 + Math.cos((ts + i * 0.5) * 1.8) * 0.5 - Math.sin((ts + i * 0.5) * 2.8) * 0.5)
+    ctx.fillRect(pos.x, pos.y, 4, -box * h * 0.8);
+    ctx.stroke();
+    pos.x += 12
+  }
+
+  pos.x += 60
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
+  ctx.font = "40px batman";
+  let text = 'TE88697-4T. 56T/NYUR 5679-456'
+  ctx.fillText(text, pos.x, pos.y + box * 0.2)
+  pos.x += 60 + ctx.measureText(text).width
+
+  let w = pos.w - pos.x + margin.w * box
+
+  for (let i = 0; i < 3; i++) {
+    ctx.beginPath();
+    let wk = Math.abs(Math.sin(ts + i * 0.5) * 0.5 +
+      Math.cos((ts + i * 0.5) * 1.8) * 0.5 - Math.sin((ts + i * 0.5) * 2.8) * 0.5)
+    if (wk > 1) wk = 1
+    ctx.fillRect(pos.x, pos.y, w * wk * 0.8, -4);
+    ctx.stroke();
+    pos.y -= 12
+  }
+
+  pos = {x: box * margin.w, y: canvas.height - box}
+  // треугольники белые
+  ctx.strokeStyle = '#fff';
+  let dy = -box * 0.2
+  for (let i = 0; i < 4; i++) {
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y + dy);
+    ctx.lineTo(pos.x + box * 0.3, pos.y + box * 0.3 + dy);
+    ctx.lineTo(pos.x + box*0.6, pos.y + dy);
+    ctx.closePath();
+    ctx.stroke();
+    pos.x += box * 1
+  }
+  pos.x += margin.w * box
+
+  ctx.font = '40px batman';
+  ctx.textBaseline = 'middle';
+  ctx.textAlign = 'left';
+  text = lang_dict[t_lang]['level'] + ' ' + (level + 1)
+  ctx.fillText(text, pos.x, pos.y + box * 0.2)
+  pos.x += 60 + ctx.measureText(text).width
+
+  text = 'MITMN567-567-567/6M7.676.689'
+  ctx.textAlign = 'right';
+  pos.x = (display_size.w + margin.w) * box
+  ctx.fillText(text, pos.x, pos.y + box * 0.2)
+}
+
 function drawGame() {
   set_active_screen('game')
   drawBg()
@@ -537,16 +607,7 @@ function drawGame() {
     // ctx.fillRect((snake[i].x + margin.w) * box, (snake[i].y + margin.t) * box, box, box);
   }
 
-  ctx.fillStyle = "white";
-  ctx.textBaseline = 'bottom';
-  ctx.textAlign = 'left';
-  ctx.font = "50px Arial";
-  ctx.fillText(score, box * 2, box * 1.7);
-
-  ctx.font = '30px batman';
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
-  ctx.fillText(lang_dict[t_lang]['level'] + ' ' + (level + 1), box * 2, canvas.height - box * 0.5);
+  drawDynamicIndication()
 
   let snakeX = snake[0].x;
   let snakeY = snake[0].y;
@@ -559,8 +620,8 @@ function drawGame() {
     if (!foot_map[level][score]) {
       clearInterval(game);
       level++
-      ctx.fillText('next level', 500, 500);
-      setTimeout(reset_level, 3000,)
+      // ctx.fillText('next level', 500, 500);
+      setTimeout(reset_level, 1000,)
       return
     }
     food = {
@@ -583,11 +644,11 @@ function drawGame() {
 
   if (snakeX < 0 || snakeX >= display_size.w
     || snakeY < 0 || snakeY >= display_size.h) {
-    ctx.fillStyle = "white";
-    ctx.font = "50px Arial";
-    ctx.fillText('end', 500, 500);
+    // ctx.fillStyle = "white";
+    // ctx.font = "50px Arial";
+    // ctx.fillText('end', 500, 500);
     clearInterval(game);
-    setTimeout(reset_level, 3000,)
+    setTimeout(reset_level, 1500,)
   }
 
   let alpha_head = {
@@ -661,11 +722,12 @@ const reset_level = function (go) {
     clearInterval(game)
   }
   next_move = new Date().getTime() + snake_interval[hard_level - 1]
+  let start_y = foot_map[0][0][1]
   snake = [
-    {x: 4, y: 4, alpha: 0, can_remove: true},
-    {x: 3, y: 4, alpha: 0, can_remove: true},
-    {x: 2, y: 4, alpha: 0, can_remove: true},
-    {x: 1, y: 4, alpha: 0, can_remove: true},
+    {x: 4, y: start_y, alpha: 0, can_remove: true},
+    {x: 3, y: start_y, alpha: 0, can_remove: true},
+    {x: 2, y: start_y, alpha: 0, can_remove: true},
+    {x: 1, y: start_y, alpha: 0, can_remove: true},
   ];
   dir = 'right';
   first_eat = false
@@ -793,10 +855,10 @@ function drawKeyboard() {
   drawInput(inputField)
 }
 
-// reset_level(true)
+reset_level(true)
 
 // game = setInterval(drawMenu, 50);
-game = setInterval(drawKeyboard, 50);
+// game = setInterval(drawKeyboard, 50);
 
 setTimeout(ws_send, 500, 'hard_level', hard_level)
 setTimeout(ws_send, 500, 'pass_ok', 0)
