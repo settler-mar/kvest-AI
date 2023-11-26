@@ -43,7 +43,8 @@ module.exports = [
       'hard_level': {
         'title': 'Сложность',
         'type': 'select',
-        'list': [1, 2, 3]
+        'list': [1, 2, 3],
+        'default': 2
       },
       'screen': {
         'title': 'Экран',
@@ -162,6 +163,12 @@ module.exports = [
     'code': 'satellite',
     'name': 'Спутники',
     'status': {
+      'hard_level': {
+        'title': 'Сложность',
+        'type': 'select',
+        'list': [1, 2, 3],
+        'default': 2
+      },
       'take': {
         'title': 'Захваченно спутников',
         'type': 'text'

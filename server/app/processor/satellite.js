@@ -16,7 +16,7 @@ module.exports = function (code) {
     // console.log(esp_status)
   }
   if (code.indexOf('hard_level') !== -1) {
-    // hard_level = parseInt(code.split('hard_level')[1]) || 0
-    // wss_send('snake', 'hard_level:' + hard_level)
+    hard_level = parseInt(code.split('hard_level')[1]) || 0
+    wss_send('snake', 'hard_level:' + hard_level)
   }
 }

@@ -110,8 +110,15 @@ esp_action.send = sendEsp;
 
 esp_action.reset = () => {
   wss_send('command', 'reset')
-  console.log(colors.cyan('esp reset'));
   esp_status = {};
+  for (let ctrl of esp_list) {
+    for (let param in ctrl['status']) {
+      if (typeof ctrl['status'][param]['default'] != "undefined") {
+        esp_status[ctrl['code']] = {}
+        esp_status[ctrl['code']][param] = ctrl['status'][param]['default']
+      }
+    }
+  }
   wss_send('status', JSON.stringify(esp_status));
   sendEsp('/reset')
 }

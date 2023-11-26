@@ -24,6 +24,9 @@ print_pos = False
 # https://visualstudio.microsoft.com/ru/visual-cpp-build-tools/
 # https://github.com/protocolbuffers/protobuf/releases
 
+hard_level = 1  # 0 - easy, 1 - normal, 2 - hard
+
+
 def get_opencv_img_res(opencv_image):
     height, width = opencv_image.shape[:2]
     return width, height
@@ -251,7 +254,7 @@ class Sputnik:
 
     def take(self, is_user, is_this):
         if self.game_run:
-            d_angel = 30 if is_user else 60
+            d_angel = [[80, 45], [45, 50], [60, 30]][hard_level - 1][is_user]
             direct = (random.randint(0, 1) * 2 - 1)
             if xor(is_user, is_this):
                 self.angle = self.user_angle + direct * d_angel
@@ -558,6 +561,8 @@ class GameClass:
                 if i.type == pygame.QUIT:
                     sys.exit()
                 if i.type == pygame.KEYDOWN:
+                    if self.hand_control != 1:
+                        self.hand_control = 1
                     if i.key == pygame.K_ESCAPE:
                         sys.exit()
                     if i.key == pygame.K_UP:
@@ -618,13 +623,17 @@ class MainClass:
         Thread(target=self.game.game).start()
 
     def command(self, message):
-        if message == 'restart':
+        if message in ['restart', 'reset']:
             self.restart_game()
 
     def status(self, data):
+        global hard_level
         status = json.loads(data)
         if 'finish_4' in status.get('hackDevice', {}):
             self.game and self.game.active_control()
+
+        if 'hard_level' in status.get('hackDevice', {}) and hard_level != int(status['hard_level']):
+            hard_level = status['hard_level']
 
     def run(self):
         self.restart_game()
