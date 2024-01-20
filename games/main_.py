@@ -14,8 +14,7 @@ from threading import Thread
 import json
 
 on_config = False
-print_pos = False
-
+print_pos = True
 
 # https://github.com/fandhikazhr/handDetector
 # Для винды

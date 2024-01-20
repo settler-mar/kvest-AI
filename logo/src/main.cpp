@@ -7,6 +7,7 @@
 #endif
 
 #define LOGO_OPEN        2  // открытие лого
+#define LOGO_CLOSE_LEVEL LOW // уровень сигнала для закрытия лого
 
 // -------------------     CAP1188 setup   -------------------------
 
@@ -199,7 +200,7 @@ void startTest() {
 void finishGame() {
   lvl = 4;
   timer = 0;
-  digitalWrite(LOGO_OPEN, HIGH);
+  digitalWrite(LOGO_OPEN, LOGO_CLOSE_LEVEL);
 }
 
 void readSerial() {
@@ -216,7 +217,7 @@ void readSerial() {
         startGame();
       }
       else if (inData.startsWith("reset")) {
-        digitalWrite(LOGO_OPEN, HIGH);
+        digitalWrite(LOGO_OPEN, LOGO_CLOSE_LEVEL);
         lvl = 1;
         timer = 0;
         ledsOff();
@@ -254,7 +255,7 @@ void ledInit() {
 
 void setup() {
   pinMode(LOGO_OPEN, OUTPUT);
-  digitalWrite(LOGO_OPEN, HIGH);
+  digitalWrite(LOGO_OPEN, LOGO_CLOSE_LEVEL);
 
   UART_S.begin(9600);
   UART_S.println("load");
@@ -376,7 +377,7 @@ void doneGame() {
   // Dimm LED
   ledsOff();
   // Open logo
-  digitalWrite(LOGO_OPEN, LOW);
+  digitalWrite(LOGO_OPEN, not LOGO_CLOSE_LEVEL);
   delay(10);
 
   // finished signal
