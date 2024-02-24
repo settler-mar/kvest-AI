@@ -143,7 +143,7 @@ void readSerial() {
         for (byte i = 0;i < out_cnt;i++) {
           setPins(i, false);
         }
-      }elif(inData.startsWith("start")) {
+      }elif(inData.startsWith("run")) {
         pulse(0);
         FastLED.setBrightness(BRIGHTNESS);
         for (byte i = 0;i < btn_cnt;i++) {
