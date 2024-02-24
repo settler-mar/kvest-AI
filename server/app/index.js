@@ -22,7 +22,7 @@ game(config);
 
 const port = config.port || 8080;
 
-setTimeout(external_proc, 2000)
+setTimeout(external_proc, 5000)
 web.listen(port, '0.0.0.0', (err) => {
   console.log(`Worker ${process.pid} running a ${config.env} server. Запущен веб интерфейс по адресу http://0.0.0.0:${port}`)
 });
