@@ -8,6 +8,8 @@ import pyautogui
 from pynput import keyboard
 from common.ws_client import WebSocketClient
 import json
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 
 pages = [
   ('http://127.0.0.1:8080/snake.html', 2, True),
@@ -42,6 +44,10 @@ class Display:
     self.driver.refresh()
     sleep(0.1)
     self.driver.fullscreen_window()
+
+  def send_key(self, key):
+    print('key press',key)
+    self.driver.find_elements(By.TAG_NAME, "body")[0].send_keys(key)
 
 
 class MouseControl:
@@ -78,7 +84,7 @@ class MouseControl:
     if "snake" in status and "pass_ok" in status["snake"]:
       if self.active_screen != status["snake"]["screen"]:
         self.active_screen = status["snake"]["screen"]
-        self.set_pos(-pages[0][1] if self.active_screen in ['video', 'game'] else self.default_display)
+        self.set_pos(-1 if self.active_screen in ['video', 'game'] else self.default_display)
 
   def reset(self):
     self.set_pos(self.default_display)
@@ -100,9 +106,9 @@ class MouseControl:
         return
       print('set_pos', mouse_display)
       self.mouse_display = mouse_display
-    if self.mouse_display == -1:
-      self.x_min = self.monitors[pages[0][1]].x + self.monitors[pages[0][1]].width / 2
-      self.y_min = self.monitors[pages[0][1]].y + self.monitors[pages[0][1]].height / 2
+    if self.mouse_display < 0:
+      self.x_min = self.monitors[pages[0][1]].x + (self.monitors[pages[0][1]].width or 200) / 2
+      self.y_min = self.monitors[pages[0][1]].y + (self.monitors[pages[0][1]].height or 200) / 2
       pyautogui.moveTo(self.x_min, self.y_min, duration=0.1)
       return
 
@@ -122,18 +128,22 @@ class MouseControl:
       if abs(dx) > 1 or abs(dy) > 1:
         if abs(dx) > abs(dy):
           if dx > 0:
-            pyautogui.keyDown("right")
-            pyautogui.keyUp("right")
+            self.displays[0].send_key(Keys.RIGHT)
+            # pyautogui.keyDown("right")
+            # pyautogui.keyUp("right")
           else:
-            pyautogui.keyDown('left')
-            pyautogui.keyUp('left')
+            self.displays[0].send_key(Keys.LEFT)
+            # pyautogui.keyDown('left')
+            # pyautogui.keyUp('left')
         else:
           if dy > 0:
-            pyautogui.keyDown('down')
-            pyautogui.keyUp('down')
+            self.displays[0].send_key(Keys.DOWN)
+            # pyautogui.keyDown('down')
+            # pyautogui.keyUp('down')
           else:
-            pyautogui.keyDown('up')
-            pyautogui.keyUp('up')
+            self.displays[0].send_key(Keys.UP)
+            # pyautogui.keyDown('up')
+            # pyautogui.keyUp('up')
         print(dx, dy, self.x_min, self.y_min)
       pyautogui.moveTo(self.x_min, self.y_min, duration=0.1)
       return
