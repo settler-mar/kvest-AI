@@ -18,6 +18,8 @@ pages = [
 
 
 class Display:
+  body = None
+
   def __init__(self, page, monitor, is_kiosk: bool = False):
     options = Options()
     options.add_experimental_option("excludeSwitches", ['enable-automation'])
@@ -44,10 +46,12 @@ class Display:
     self.driver.refresh()
     sleep(0.1)
     self.driver.fullscreen_window()
+    sleep(3)
+    self.body = self.driver.find_element(By.TAG_NAME, 'body')
 
   def send_key(self, key):
-    print('key press',key)
-    self.driver.find_elements(By.TAG_NAME, "body")[0].send_keys(key)
+    print('key press', key)
+    self.body.send_keys(key)
 
 
 class MouseControl:
@@ -107,8 +111,8 @@ class MouseControl:
       print('set_pos', mouse_display)
       self.mouse_display = mouse_display
     if self.mouse_display < 0:
-      self.x_min = self.monitors[pages[0][1]].x + (self.monitors[pages[0][1]].width or 200) / 2
-      self.y_min = self.monitors[pages[0][1]].y + (self.monitors[pages[0][1]].height or 200) / 2
+      self.x_min = self.monitors[0].x + (self.monitors[0].width or 200) / 2
+      self.y_min = self.monitors[0].y + (self.monitors[0].height or 200) / 2
       pyautogui.moveTo(self.x_min, self.y_min, duration=0.1)
       return
 
@@ -145,6 +149,7 @@ class MouseControl:
             # pyautogui.keyDown('up')
             # pyautogui.keyUp('up')
         print(dx, dy, self.x_min, self.y_min)
+        sleep(1)
       pyautogui.moveTo(self.x_min, self.y_min, duration=0.1)
       return
 
