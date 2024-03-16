@@ -416,7 +416,7 @@ function eatTail(head, arr) {
   }
 }
 
-function drawBg() {
+function drawBg(ctx) {
 
   /*if (bg.pos.x !== bg.go_pos.x) {
     bg.pos.x += bg.step.dx
@@ -473,7 +473,7 @@ function drawBg() {
 
 const TO_RADIANS = Math.PI / 180
 
-function drawRotatedImage(image, x, y, angle) {
+function drawRotatedImage(ctx, image, x, y, angle) {
 
   // save the current co-ordinate system
   // before we screw with it
@@ -494,7 +494,7 @@ function drawRotatedImage(image, x, y, angle) {
   ctx.restore();
 }
 
-function drawScaleImage(image, x, y, scale) {
+function drawScaleImage(ctx, image, x, y, scale) {
 
   // save the current co-ordinate system
   // before we screw with it
@@ -517,7 +517,7 @@ function drawScaleImage(image, x, y, scale) {
 
 let next_move = 0;
 
-function drawDynamicIndication() {
+function drawDynamicIndication(ctx) {
   let pos = {x: box * 2, y: box * 1.5, w: box * display_size.w}
   // ctx.fillStyle = "white";
   // ctx.textBaseline = 'bottom';
@@ -529,6 +529,8 @@ function drawDynamicIndication() {
   // ctx.rect(20, 20, 150, 100);
   // ctx.stroke();
 
+  ctx.strokeStyle = '#fff';
+  ctx.fillStyle = "white";
   let ts = Math.floor(new Date().getTime() / 500) / 3;
   for (let i = 0; i < 25; i++) {
     ctx.beginPath();
@@ -538,13 +540,7 @@ function drawDynamicIndication() {
     pos.x += 12
   }
 
-  pos.x += 60
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'bottom';
-  ctx.font = "40px batman";
-  let text = 'TE88697-4T. 56T/NYUR 5679-456'
-  ctx.fillText(text, pos.x, pos.y + box * 0.2)
-  pos.x += 60 + ctx.measureText(text).width
+  pos.x += 1000
 
   let w = pos.w - pos.x + margin.w * box
 
@@ -557,6 +553,31 @@ function drawDynamicIndication() {
     ctx.stroke();
     pos.y -= 12
   }
+}
+
+let ctx_bg = null
+let m_canvas = null
+
+function init_game() {
+  set_active_screen('game')
+  m_canvas = document.createElement('canvas')
+  m_canvas.width = canvas.width;
+  m_canvas.height = canvas.height;
+  ctx_bg = m_canvas.getContext("2d");
+
+  drawBg(ctx_bg)
+  drawStaticIndication(ctx_bg)
+}
+
+function drawStaticIndication(ctx) {
+  let pos = {x: box * 2 + 350, y: box * 1.5, w: box * display_size.w}
+
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'bottom';
+  ctx.font = "40px batman";
+  ctx.strokeStyle = '#fff';
+  let text = 'TE88697-4T. 56T/NYUR 5679-456'
+  ctx.fillText(text, pos.x, pos.y + box * 0.2)
 
   pos = {x: box * margin.w, y: canvas.height - box}
   // треугольники белые
@@ -566,7 +587,7 @@ function drawDynamicIndication() {
     ctx.beginPath();
     ctx.moveTo(pos.x, pos.y + dy);
     ctx.lineTo(pos.x + box * 0.3, pos.y + box * 0.3 + dy);
-    ctx.lineTo(pos.x + box*0.6, pos.y + dy);
+    ctx.lineTo(pos.x + box * 0.6, pos.y + dy);
     ctx.closePath();
     ctx.stroke();
     pos.x += box * 1
@@ -584,22 +605,26 @@ function drawDynamicIndication() {
   ctx.textAlign = 'right';
   pos.x = (display_size.w + margin.w) * box
   ctx.fillText(text, pos.x, pos.y + box * 0.2)
+
 }
 
 function drawGame() {
-  set_active_screen('game')
-  drawBg()
+  let tmp_canvas = document.createElement('canvas')
+  tmp_canvas.width = canvas.width;
+  tmp_canvas.height = canvas.height;
+  let tmp_ctx = tmp_canvas.getContext("2d");
+  tmp_ctx.drawImage(m_canvas, 0, 0);
 
   // ctx.drawImage(foodImg, (food.x + margin.w) * box, (food.y + margin.t) * box);
-  //drawRotatedImage(foodImg, (food.x + margin.w + 0.5) * box, (food.y + margin.t + 0.5) * box, 90);
+  //drawRotatedImage(tmp_ctx, foodImg, (food.x + margin.w + 0.5) * box, (food.y + margin.t + 0.5) * box, 90);
 
-  drawScaleImage(foodImg, (food.x + margin.w + 0.5) * box, (food.y + margin.t + 0.5) * box,
+  drawScaleImage(tmp_ctx, foodImg, (food.x + margin.w + 0.5) * box, (food.y + margin.t + 0.5) * box,
     .85 + Math.sin((new Date().getTime() % 3600) / 600) * 0.15);
 
   for (let i = 0; i < snake.length; i++) {
     let is_last = i === snake.length - 1
     let img = i === 0 ? snakeHead : is_last ? snakeHvist : first_eat && !energy ? snakeImgR : snakeImgY
-    drawRotatedImage(img,
+    drawRotatedImage(tmp_ctx, img,
       (snake[i].x + margin.w + 0.5) * box, (snake[i].y + margin.t + 0.5) * box,
       snake[is_last ? i - 1 : i].alpha)
 
@@ -607,7 +632,7 @@ function drawGame() {
     // ctx.fillRect((snake[i].x + margin.w) * box, (snake[i].y + margin.t) * box, box, box);
   }
 
-  drawDynamicIndication()
+  drawDynamicIndication(tmp_ctx)
 
   let snakeX = snake[0].x;
   let snakeY = snake[0].y;
@@ -664,6 +689,8 @@ function drawGame() {
     alpha: alpha_head,
     can_remove: !first_eat
   };
+
+  ctx.drawImage(tmp_canvas, 0, 0);
 
   eatTail(newHead, snake);
 
@@ -744,6 +771,7 @@ const reset_level = function (go) {
       y: foot_map[level][score][1],
     };
     ws_send('level_now', level + 1)
+    init_game()
     game = setInterval(drawGame, snake_interval[hard_level - 1]);
   }
 }
