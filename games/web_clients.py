@@ -1,3 +1,5 @@
+import chromedriver_autoinstaller
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -12,8 +14,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 
 pages = [
-  ('http://127.0.0.1:8080/snake.html', 2, True),
-  ('http://127.0.0.1:8080/video.html', 1),
+  # ('http://127.0.0.1:8080/snake.html', 2, True),
+  # ('http://127.0.0.1:8080/video.html', 1),
 ]
 
 
@@ -64,7 +66,7 @@ class MouseControl:
 
   def __init__(self):
     self.print_monitor_info()
-    self.default_display = pages[0][1] if pages[0][1] < len(self.monitors) else 0
+    self.default_display = pages[0][1] if len(pages) and pages[0][1] < len(self.monitors) else 0
     self.displays = [Display(url,
                              self.monitors[display_number if display_number < len(self.monitors) else 0],
                              *args)
@@ -105,6 +107,7 @@ class MouseControl:
       print()
 
   def set_pos(self, mouse_display=None):
+    print('set_pos:', self.mouse_display)
     if mouse_display is not None:
       if self.mouse_display == mouse_display:
         return
@@ -116,10 +119,10 @@ class MouseControl:
       pyautogui.moveTo(self.x_min, self.y_min, duration=0.1)
       return
 
-    self.x_min = self.monitors[self.mouse_display].x
-    self.y_min = self.monitors[self.mouse_display].y
-    self.x_max = self.monitors[self.mouse_display].x + self.monitors[self.mouse_display].width
-    self.y_max = self.monitors[self.mouse_display].y + self.monitors[self.mouse_display].height
+    self.x_min = self.monitors[self.mouse_display].x + 100
+    self.y_min = self.monitors[self.mouse_display].y + 100
+    self.x_max = self.monitors[self.mouse_display].x + self.monitors[self.mouse_display].width - 100
+    self.y_max = self.monitors[self.mouse_display].y + self.monitors[self.mouse_display].height - 100
 
     pyautogui.moveTo((self.x_min + self.x_max) / 2, (self.y_min + self.y_max) / 2, duration=0.1)
 
@@ -132,20 +135,28 @@ class MouseControl:
       if abs(dx) > 1 or abs(dy) > 1:
         if abs(dx) > abs(dy):
           if dx > 0:
-            self.displays[0].send_key(Keys.RIGHT)
+            print('>> RIGHT')
+            if self.displays:
+              self.displays[0].send_key(Keys.RIGHT)
             # pyautogui.keyDown("right")
             # pyautogui.keyUp("right")
           else:
-            self.displays[0].send_key(Keys.LEFT)
+            print('>> LEFT')
+            if self.displays:
+              self.displays[0].send_key(Keys.LEFT)
             # pyautogui.keyDown('left')
             # pyautogui.keyUp('left')
         else:
           if dy > 0:
-            self.displays[0].send_key(Keys.DOWN)
+            print('>> DOWN')
+            if self.displays:
+              self.displays[0].send_key(Keys.DOWN)
             # pyautogui.keyDown('down')
             # pyautogui.keyUp('down')
           else:
-            self.displays[0].send_key(Keys.UP)
+            print('>> UP')
+            if self.displays:
+              self.displays[0].send_key(Keys.UP)
             # pyautogui.keyDown('up')
             # pyautogui.keyUp('up')
         print(dx, dy, self.x_min, self.y_min)
@@ -184,16 +195,22 @@ def main():
       print("Клавиша Esc нажата. Программа завершена.")
       return False  # Останавливаем прослушивание клавиш
 
+    if key == keyboard.Key.space:
+      mouse_control.set_pos(-1)
+
   listener = keyboard.Listener(on_press=on_key_press)
   listener.start()
+  print('run keyboard monitor')
 
   mouse_control = MouseControl()
-
   while listener.is_alive():
     mouse_control.processed()
   mouse_control.stop()
 
 
 if __name__ == '__main__':
+  print(chromedriver_autoinstaller.get_chrome_version())
+  chromedriver_autoinstaller.install()
+
   pyautogui.FAILSAFE = False
   main()

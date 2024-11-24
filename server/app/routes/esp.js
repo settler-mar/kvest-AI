@@ -88,6 +88,7 @@ const sendEsp = (path, code, test_property) => {
       if (esp_name[code]['send']) {
         esp_name[code]['send'](path)
       } else {
+        console.log('send to esp > ', esp_name[code].ip, path, code)
         http.request({host: esp_name[code].ip, path}).on('error', (e) => {
           //console.error(`problem with request: ${e.message}`);
         }).end();

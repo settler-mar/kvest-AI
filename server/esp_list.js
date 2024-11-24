@@ -218,6 +218,39 @@ module.exports = [
     }
   },
   {
+    'code': 'gloves0',
+    'name': "Перчатки 1-я комната",
+    'commands': {
+      'reset': 'Cброс',
+      'ch0': 'Вкл/выкл подсветка',
+    },
+    'status': {
+      'digital0': {
+        'title': 'подсветка',
+        'type': 'status'
+      }
+    }
+  },
+  {
+    'code': 'gloves1',
+    'name': "Перчатки 2-я комната",
+    'commands': {
+      'reset': 'Cброс',
+      'ch1': 'Вкл/выкл подсветка',
+      'ch2': 'Вкл/выкл порт',
+    },
+    'status': {
+      'digital1': {
+        'title': 'подсветка',
+        'type': 'status'
+      },
+      'digital2': {
+        'title': 'порт',
+        'type': 'status'
+      }
+    }
+  },
+  {
     'code': 'hackDevice',
     'name': "Перчатки",
     'commands': {
