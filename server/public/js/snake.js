@@ -5,6 +5,9 @@ var animationEnd = 'webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimation
 var ws_error = 0
 var hard_level = 2
 var snake_interval = [300, 200, 100]
+var last_delete = null
+var change_dir_timer = 0
+var next_dir = null
 
 document.addEventListener("DOMContentLoaded", function (event) {
   ws_start();
@@ -64,7 +67,7 @@ function ws_start() {
     var data = e.data.split(':')
     var key = data.shift()
     data = data.join(':')
-    console.log(key, data)
+    // console.log(key, data)
     if (typeof (app) !== 'undefined') {
       if (key === 'time') {
         app.time = data
@@ -133,6 +136,10 @@ const textColor = '#fff'; // Белый цвет текста
 const borderRadius = 10; // Радиус скругления углов
 const borderWidth = 3; // Толщина рамки
 
+let item_width = 450
+let item_height = 70
+let item_margin = 20
+
 let t_lang = 'ru'
 const lang_dict = {
   'ru': {
@@ -185,7 +192,7 @@ let active_screen = false
 let level = 0
 let max_level = 0
 const foot_map = [
-  [[15, 3], [25, 6], [21, 18], [15, 15], [15, 4]],//0
+  [[15 - 5, 3], [25 - 5, 6], [21 - 5, 18], [15 - 5, 15], [15 - 5, 4]],//0
   [[15, 3], [25, 6], [20, 10], [15, 15], [25, 18]],//2
   [[25, 3], [15, 5], [19, 10], [25, 15], [15, 18]],//5
   [[15, 6], [20, 3], [25, 8], [25, 18]],//7
@@ -296,16 +303,12 @@ canvas.addEventListener('mousemove', function (event) {
   const x = event.clientX - canvas.offsetLeft;
   const y = event.clientY - canvas.offsetTop;
 
-  let item_width = 350
-  let item_height = 70
-  let item_margin = 10
-  let item_y = (canvas.height - ((item_height + item_margin) * foot_map.length + item_margin)) / 2
-
   if ((x < canvas.width / 2 - item_width / 2) || (x > canvas.width / 2 + item_width / 2)) {
     level_hover = -1
     return
   }
 
+  let item_y = (canvas.height - ((item_height + item_margin) * (foot_map.length + 1) + item_margin)) / 2
   let y_ = y - item_y
   if (y_ < 0) {
     level_hover = -1
@@ -388,6 +391,8 @@ let dir;
 function direction(event) {
   if (first_eat && !energy) return;
 
+  if (change_dir_timer > new Date().getTime()) return;
+
   const new_dir = {
     37: "left",
     38: "up",
@@ -402,9 +407,48 @@ function direction(event) {
   }[dir]
 
   if (new_dir && dir !== new_dir && conflict_dir !== new_dir) {
-    if (first_eat) energy = 0
-    dir = new_dir
+    change_dir_timer = new Date().getTime() + snake_interval[hard_level - 1]
+    next_dir = new_dir
   }
+}
+
+function applyDir() {
+  if (next_dir === null) return;
+
+  // help move
+  const move_dir = {
+    "right": "x",
+    "down": "y",
+    "left": "x",
+    "up": "y"
+  }[dir]
+  let delta_move = food[move_dir] - snake[0][move_dir]
+  if (delta_move !== 0 && Math.abs(delta_move) < 5) { // need help move
+    if (delta_move > 0) { // add move
+      console.log('add move')
+      let new_pos = {...snake[0]}
+      new_pos[move_dir] += delta_move / Math.abs(delta_move)
+      snake.unshift(new_pos)
+      if (snake[snake.length - 2].can_remove) {
+        last_delete = snake.pop();
+      }
+    } else { // remove first element
+      snake.shift()
+      if (last_delete) {
+        snake.push(last_delete)
+        last_delete = null
+      }
+      console.log('remove first element')
+    }
+  } else {
+    console.log('skip help move')
+  }
+
+  console.log(JSON.stringify({next_dir, dir, food, snake}))
+
+  if (first_eat) energy = 0
+  dir = next_dir
+  next_dir = null
 }
 
 function eatTail(head, arr) {
@@ -633,6 +677,7 @@ function drawGame() {
   }
 
   drawDynamicIndication(tmp_ctx)
+  applyDir()
 
   let snakeX = snake[0].x;
   let snakeY = snake[0].y;
@@ -658,7 +703,11 @@ function drawGame() {
 //  if (next_move < new Date().getTime()) {
 //    next_move = next_move + tact_render
 
-  if (snake[snake.length - 2].can_remove) snake.pop();
+  if (snake[snake.length - 2].can_remove) {
+    last_delete = snake.pop();
+  } else {
+    last_delete = null
+  }
 
 
   if (dir === "left") snakeX -= 1;
@@ -708,9 +757,6 @@ function drawMenu() {
   ctx.textBaseline = 'middle';
   ctx.textAlign = 'center';
 
-  let item_width = 450
-  let item_height = 70
-  let item_margin = 20
   let item_y = (canvas.height - ((item_height + item_margin) * (foot_map.length + 1) + item_margin)) / 2
 
   ctx.font = '55px batman';
@@ -882,6 +928,8 @@ function drawKeyboard() {
 
   drawInput(inputField)
 }
+
+reset_level(true)
 
 // reset_level(true)
 
