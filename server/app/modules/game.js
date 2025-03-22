@@ -4,10 +4,19 @@ global.game = {
   time: 0,
   game_time: 60 * 60,
   lang: 'ru',
-  device_game: 0
+  device_game: 0,
+  display: []
 }
 
 global.game_control = {}
+
+// load global.game.display from display.json
+const fs = require('fs');
+const path = require('path');
+const displayPath = path.join(__dirname, '../../display.json');
+if (fs.existsSync(displayPath)) {
+  global.game.display = JSON.parse(fs.readFileSync(displayPath));
+}
 
 let timerGame = null
 
@@ -54,6 +63,26 @@ module.exports = (config) => {
     wss_send('command', 'add time')
     game.game_time += 60 * 5
     timer_send()
+  }
+
+  game_control.set_display = (value) => {
+    game.status = -2;
+    update_game()
+  }
+  game_control.canceled_set_display = (value) => {
+    game.status = 0;
+    update_game()
+  }
+
+  game_control.save_display = (value) => {
+    game.display = JSON.parse(value)
+    const fs = require('fs');
+    const path = require('path');
+    const displayPath = path.join(__dirname, '../../display.json');
+    fs.writeFileSync(displayPath, JSON.stringify(global.game.display, null, 2))
+
+    game.status = 0;
+    update_game()
   }
 
   game_control.start = () => {
@@ -132,7 +161,8 @@ module.exports = (config) => {
     }
     message = message.split(':');
     if (message[0] in game_control) {
-      game_control[message[0]](message[1])
+      const code = message.shift()
+      game_control[code](message.join(':'))
       return
     }
     esp_action.do(message[0], message[1])

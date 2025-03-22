@@ -165,3 +165,14 @@ td img {
     content: attr(data-room);
     bottom: 100%;
 }
+
+.display_config{
+    padding: 10px 10px 20px 10px;
+    position: absolute;
+    background: #999;
+    box-shadow: 0 0 10px #230393;
+}
+
+.display_config table{
+    margin-bottom: 10px;
+}

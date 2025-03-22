@@ -38,18 +38,18 @@ module.exports.init = (app, config) => {
       ]
     },
     //template: {
-      html: {
-        start: '<!DOCTYPE html><html>',
-        end: '</html>'
-      },
-      body: {
-        start: '<body>',
-        end: '</body>'
-      },
-      template: {
-        start: '<div id="apps">',
-        end: '</div>'
-      }
+    html: {
+      start: '<!DOCTYPE html><html>',
+      end: '</html>'
+    },
+    body: {
+      start: '<body>',
+      end: '</body>'
+    },
+    template: {
+      start: '<div id="apps">',
+      end: '</div>'
+    }
     //}
   };
 
@@ -61,75 +61,88 @@ module.exports.init = (app, config) => {
 
   //expressVue.use(app, vueOptions).then(() => {
 
-    //Security
-    app.use(helmet());
-    app.disable("x-powered-by");
+  //Security
+  app.use(helmet());
+  app.disable("x-powered-by");
 
-    app.use(bodyParser.json());
-    app.use(bodyParser.urlencoded({
-      extended: true,
-    }));
-    app.use(validator());
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({
+    extended: true,
+  }));
+  app.use(validator());
 
-    app.use(compress());
+  app.use(compress());
 
-    app.use(express.static(config.static));
-    app.use(favicon(path.join(config.static, 'favicon.png')))
+  app.use(express.static(config.static));
+  app.use(favicon(path.join(config.static, 'favicon.png')))
 
-    let sessionConfig = {
-      name: "session",
-      keys: [
-        "CHANGE_ME",
-      ],
-      resave: true,
-      saveUninitialized: true,
-      cookie: {
-        domain: "AI",
-        secure: false,
-        httpOnly: true,
+  let sessionConfig = {
+    name: "session",
+    keys: [
+      "CHANGE_ME",
+    ],
+    resave: true,
+    saveUninitialized: true,
+    cookie: {
+      domain: "AI",
+      secure: false,
+      httpOnly: true,
+    },
+  };
+  if (env === "production") {
+    app.set("trust proxy", 1);
+    sessionConfig.cookie.secure = true;
+    logType = "combined";
+  }
+
+  if (env === "development") {
+    app.use(logger(logType));
+  }
+
+  app.use(cookieParser());
+
+  app.use(methodOverride());
+
+  app.use(cookieSession(sessionConfig));
+
+  app.use("/", router);
+
+  app.get('/display', function (req, res) {
+    res.send(JSON.stringify(global.game.display))
+  })
+
+  app.post('/display', function (req, res) {
+    global.game.display.push(req.body)
+    const fs = require('fs');
+    const path = require('path');
+    const displayPath = path.join(__dirname, '../../display.json');
+    fs.writeFileSync(displayPath, JSON.stringify(global.game.display, null, 2))
+    res.send('ok')
+  })
+
+  let controllers = glob.sync(config.root + "/routes/*.js");
+  controllers.forEach(function (controller) {
+    module.require(controller)(router, config);
+  });
+
+  /**
+   * Generic 404 handler
+   * @param {object} req
+   * @param {object} res
+   */
+  function error404handler(req, res) {
+    const data = {
+      title: "Error 404",
+    };
+    req.vueOptions = {
+      head: {
+        title: "Error 404",
       },
     };
-    if (env === "production") {
-      app.set("trust proxy", 1);
-      sessionConfig.cookie.secure = true;
-      logType = "combined";
-    }
+    res.statusCode = 404;
+    res.renderVue("error.vue", data, req.vueOptions);
+  }
 
-    if (env === "development") {
-      app.use(logger(logType));
-    }
-
-    app.use(cookieParser());
-
-    app.use(methodOverride());
-
-    app.use(cookieSession(sessionConfig));
-
-    app.use("/", router);
-
-    let controllers = glob.sync(config.root + "/routes/*.js");
-    controllers.forEach(function (controller) {
-      module.require(controller)(router, config);
-    });
-
-    /**
-     * Generic 404 handler
-     * @param {object} req
-     * @param {object} res
-     */
-    function error404handler(req, res) {
-      const data = {
-        title: "Error 404",
-      };
-      req.vueOptions = {
-        head: {
-          title: "Error 404",
-        },
-      };
-      res.statusCode = 404;
-      res.renderVue("error.vue", data, req.vueOptions);
-    }
-
-    app.use(error404handler);
+  app.use(error404handler);
   //})
 }

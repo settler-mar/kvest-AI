@@ -16,3 +16,4 @@ websocket-client
 msvc-runtime
 websockets
 webdriver_manager
+chromedriver_autoinstaller

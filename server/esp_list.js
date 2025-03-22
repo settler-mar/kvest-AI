@@ -240,6 +240,10 @@ module.exports = [
       'ch2': 'Вкл/выкл порт',
     },
     'status': {
+      'digital0': {
+        'title': 'замок',
+        'type': 'status'
+      },
       'digital1': {
         'title': 'подсветка',
         'type': 'status'

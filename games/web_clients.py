@@ -4,6 +4,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.action_chains import ActionChains
 from time import sleep
 from screeninfo import get_monitors
 import pyautogui
@@ -12,11 +13,11 @@ from common.ws_client import WebSocketClient
 import json
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+import requests
+import tkinter as tk
+import json
 
-pages = [
-  # ('http://127.0.0.1:8080/snake.html', 2, True),
-  # ('http://127.0.0.1:8080/video.html', 1),
-]
+host = '127.0.0.1'
 
 
 class Display:
@@ -33,12 +34,19 @@ class Display:
       options.add_argument("--kiosk")
     options.add_argument("--disable-password-manager-reauthentication")
 
-    service = Service(ChromeDriverManager().install())
-    self.driver = webdriver.Chrome(options=options, service=service)
+    try:
+      service = Service(ChromeDriverManager().install())
+      self.driver = webdriver.Chrome(options=options, service=service)
+    except:
+      print(chromedriver_autoinstaller.get_chrome_version())
+      chromedriver_autoinstaller.install()
+      self.driver = webdriver.Chrome(options=options)
+
+    self.actions = ActionChains(self.driver)
     self.driver.set_window_position(monitor.x, monitor.y + 50)
     self.driver.set_window_size(monitor.width, monitor.height)
     # self.driver.maximize_window()
-    self.driver.fullscreen_window()
+    # self.driver.fullscreen_window()
     self.driver.get(page)
     self.reload()
 
@@ -52,11 +60,34 @@ class Display:
     self.body = self.driver.find_element(By.TAG_NAME, 'body')
 
   def send_key(self, key):
-    print('key press', key)
+    key_name, key_code, arrow = {
+      Keys.UP: ['ArrowUp', 38, Keys.ARROW_UP],
+      Keys.DOWN: ['ArrowDown', 40, Keys.ARROW_DOWN],
+      Keys.LEFT: ['ArrowLeft', 37, Keys.ARROW_LEFT],
+      Keys.RIGHT: ['ArrowRight', 39, Keys.ARROW_RIGHT],
+    }[key]
+    print('key press', key_name, key_code)
     self.body.send_keys(key)
+    self.body.send_keys(arrow)
+    js = f"""const event = new KeyboardEvent('keydown', {{
+                  key: '{key_name}',
+                  code: '{key_name},
+                  keyCode: {key_code},
+                  which: {key_code},
+                  bubbles: true,
+                }});
+                document.dispatchEvent(event);"""
+    # self.driver.execute_script(js)
+    self.actions.send_keys(arrow).perform()
 
 
 class MouseControl:
+  pages = [
+    [f'http://{host}:8080/snake.html', 2, True],
+    [f'http://{host}:8080/video.html', 1],
+  ]
+
+  display_windows = None
   mouse_display = -1  # номер экрана на котором мыш. eсли меньше 0, то мышь находится в центре экрана и  эмитирует клавиатуру
   monitors = get_monitors()
   active_screen = None
@@ -66,24 +97,102 @@ class MouseControl:
 
   def __init__(self):
     self.print_monitor_info()
-    self.default_display = pages[0][1] if len(pages) and pages[0][1] < len(self.monitors) else 0
+
+    # get display setting from http://127.0.0.1:8080/display
+    try:
+      display_data = requests.get(f"http://{host}:8080/display").json()
+    except:
+      display_data = {}
+
+    display_data = {data.host: data.display for data in display_data if 'host' in display_data}
+    for index, page in enumerate(self.pages):
+      if page[0] in display_data:
+        self.pages[index][1] = display_data[page[0]]
+      else:
+        try:
+          requests.post(f"http://{host}:8080/display", json={'name': page[0].split('/')[-1],
+                                                             'host': page[0],
+                                                             'display': page[1]})
+        except:
+          print('error set display data')
+    # print(self.pages)
+    # quit()
+
+    self.default_display = self.pages[0][1] if len(self.pages) and self.pages[0][1] < len(self.monitors) else 0
     self.displays = [Display(url,
                              self.monitors[display_number if display_number < len(self.monitors) else 0],
                              *args)
-                     for url, display_number, *args in pages]
+                     for url, display_number, *args in self.pages]
     self.reset()
 
     message_handlers = {
       "command": self.command,
       "status": self.status,
+      "game": self.games_process
     }
 
-    address = "ws://127.0.0.1:8080"
+    address = f"ws://{host}:8080"
 
     client = WebSocketClient(address, message_handlers)
     client.start()
 
     self.client = client
+
+  def show_display_number(self):
+    if self.display_windows:
+      return
+    self.display_windows = []
+    for i, monitor in enumerate(self.monitors):
+      window = tk.Tk()
+      window.overrideredirect(True)  # Remove window decorations
+      window.geometry(f"200x100+{monitor.x + monitor.width // 2 - 100}+{monitor.y + monitor.height // 2 - 50}")
+      window.wm_attributes("-topmost", True)  # Keep the window on top
+
+      # Create a label for the display number
+      label1 = tk.Label(
+        window,
+        text=f"Display {i}",
+        font=("Arial", 20, "bold"),
+        bg="black",
+        fg="white",
+        anchor="center"
+      )
+      label1.pack(fill=tk.BOTH, expand=True)
+
+      # Create a label for display resolution and position
+      label2 = tk.Label(
+        window,
+        text=f"{monitor.width}x{monitor.height} @ ({monitor.x}, {monitor.y})",
+        font=("Arial", 12),
+        bg="black",
+        fg="white",
+        anchor="center"
+      )
+      label2.pack(fill=tk.BOTH, expand=True)
+
+      self.display_windows.append(window)
+      window.after(3000, lambda win=window: win.destroy())  # Auto-close after 3 seconds
+      window.update()
+
+    print('show display number')
+
+  def hide_display_number(self):
+    if not self.display_windows:
+      return
+
+    for window in self.display_windows:
+      try:
+        window.destroy()
+      except tk.TclError:
+        pass  # If the window is already destroyed
+    self.display_windows = []
+
+  def games_process(self, data):
+    data = json.loads(data)
+    if data.get('status') == -2:
+      self.show_display_number()
+    else:
+      self.hide_display_number()
 
   def status(self, data):
     status = json.loads(data)
@@ -98,8 +207,14 @@ class MouseControl:
     [display.reload() for display in self.displays]
 
   def print_monitor_info(self):
+    if not self.monitors:
+      print('monitors not faund')
+      return
+    print(self.monitors)
     # Перебор дисплеев и получение их свойств
-    for i, monitor in enumerate(self.monitors, 1):
+    i = 0
+    for monitor in self.monitors:
+      i += 1
       print("Дисплей №", i)
       print("Разрешение:", monitor.width, "x", monitor.height)
       print("Смещение по X:", monitor.x)

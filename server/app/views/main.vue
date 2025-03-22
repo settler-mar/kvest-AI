@@ -7,6 +7,18 @@
       <span>Текущая игра: {{ game.timer }}</span>
       <span>
         <button v-on:click="evReset" v-if="game.status==0 || game.status==-1">Сброс</button>
+        <button v-on:click="setDisplay" v-if="game.status==0">Экраны</button>
+        <div class="display_config" v-if="game.status==-2">
+          <table>
+            <tr v-for="(d,i) in game.display">
+              <td>{{ i + 1 }}</td>
+              <td>{{ d.name }}</td>
+              <td><input v-model="d.display" type="number" min="0" max="6"/></td>
+            </tr>
+          </table>
+          <button v-on:click="saveDisplay">Сохранить</button>
+          <button v-on:click="cancelDisplay">Отменить</button>
+        </div>
         <button v-on:click="evStart" v-if="game.status==0">Старт</button>
         <button v-on:click="evStop" v-if="game.status==1 || game.status==2">Стоп</button>
         <button v-on:click="evStart" v-if="game.status==2">Продолжить</button>
@@ -107,6 +119,10 @@ export default {
       months: ['январь', 'февраль', 'март', 'апрель', 'май', 'июнь', 'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь'],
       loading: false,
       db: [],
+      displays: [
+        {'name': 'test', 'display': 0},
+        {'name': 'test1', 'display': 1},
+      ]
     }
   },
   components: {
@@ -118,6 +134,15 @@ export default {
     },
     evReset(e) {
       ws.send('reset')
+    },
+    setDisplay(e) {
+      ws.send('set_display')
+    },
+    cancelDisplay(e) {
+      ws.send('canceled_set_display')
+    },
+    saveDisplay(e) {
+      ws.send('save_display:' + JSON.stringify(this.game.display))
     },
     evStop(e) {
       ws.send('stop')
