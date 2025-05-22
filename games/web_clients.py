@@ -17,11 +17,7 @@ import requests
 import tkinter as tk
 import json
 
-pages = [
-    # ('http://127.0.0.1:8080/video.html', 2),
-    ('http://127.0.0.1:8080/snake.html', 2)
-]
-
+host='127.0.0.1'
 
 class Display:
   body = None
@@ -49,7 +45,7 @@ class Display:
     self.driver.set_window_position(monitor.x, monitor.y + 50)
     self.driver.set_window_size(monitor.width, monitor.height)
     # self.driver.maximize_window()
-    # self.driver.fullscreen_window()
+    self.driver.fullscreen_window()
     self.driver.get(page)
     self.reload()
 
@@ -86,7 +82,7 @@ class Display:
 
 class MouseControl:
   pages = [
-    [f'http://{host}:8080/snake.html', 2, True],
+    [f'http://{host}:8080/snake.html', 0, True],
     [f'http://{host}:8080/video.html', 1],
   ]
 
@@ -100,26 +96,8 @@ class MouseControl:
 
   def __init__(self):
     self.print_monitor_info()
-
     # get display setting from http://127.0.0.1:8080/display
-    try:
-      display_data = requests.get(f"http://{host}:8080/display").json()
-    except:
-      display_data = {}
-
-    display_data = {data.host: data.display for data in display_data if 'host' in display_data}
-    for index, page in enumerate(self.pages):
-      if page[0] in display_data:
-        self.pages[index][1] = display_data[page[0]]
-      else:
-        try:
-          requests.post(f"http://{host}:8080/display", json={'name': page[0].split('/')[-1],
-                                                             'host': page[0],
-                                                             'display': page[1]})
-        except:
-          print('error set display data')
-    # print(self.pages)
-    # quit()
+    self.get_display_data()
 
     self.default_display = self.pages[0][1] if len(self.pages) and self.pages[0][1] < len(self.monitors) else 0
     self.displays = [Display(url,
@@ -140,6 +118,26 @@ class MouseControl:
     client.start()
 
     self.client = client
+
+  def get_display_data(self):
+    has_connect=True
+    try:
+      display_data = requests.get(f"http://{host}:8080/display").json()
+    except:
+      has_connect=False
+      display_data = {}
+
+    display_data = {data.host: data.display for data in display_data if 'host' in display_data}
+    for index, page in enumerate(self.pages):
+      if page[0].split('/')[-1] in display_data:
+        self.pages[index][1] = display_data[page[0]]
+      else:
+        if has_connect:
+          requests.post(f"http://{host}:8080/display", json={'name': page[0].split('/')[-1],
+                                                             'host': page[0],
+                                                             'display': page[1]})
+          sleep(1)
+    print(self.pages)
 
   def show_display_number(self):
     if self.display_windows:
@@ -210,14 +208,8 @@ class MouseControl:
     [display.reload() for display in self.displays]
 
   def print_monitor_info(self):
-    if not self.monitors:
-      print('monitors not faund')
-      return
-    print(self.monitors)
     # Перебор дисплеев и получение их свойств
-    i = 0
-    for monitor in self.monitors:
-      i += 1
+    for i, monitor in enumerate(self.monitors, 1):
       print("Дисплей №", i)
       print("Разрешение:", monitor.width, "x", monitor.height)
       print("Смещение по X:", monitor.x)
@@ -278,7 +270,7 @@ class MouseControl:
             # pyautogui.keyDown('up')
             # pyautogui.keyUp('up')
         print(dx, dy, self.x_min, self.y_min)
-        sleep(1)
+        sleep(.3)
       pyautogui.moveTo(self.x_min, self.y_min, duration=0.1)
       return
 
@@ -321,14 +313,12 @@ def main():
   print('run keyboard monitor')
 
   mouse_control = MouseControl()
+
   while listener.is_alive():
     mouse_control.processed()
   mouse_control.stop()
 
 
 if __name__ == '__main__':
-  print(chromedriver_autoinstaller.get_chrome_version())
-  chromedriver_autoinstaller.install()
-
   pyautogui.FAILSAFE = False
   main()

@@ -938,9 +938,10 @@ function drawKeyboard(tmp_ctx) {
   drawInput(inputField, tmp_ctx)
 }
 
+//reset_level(true)
 
 // game = setInterval(draw_screen, 50, drawMenu);
-// game = setInterval(draw_screen, 50, drawKeyboard);
+game = setInterval(draw_screen, 50, drawKeyboard);
 
 setTimeout(ws_send, 500, 'hard_level', hard_level)
 setTimeout(ws_send, 500, 'pass_ok', 0)

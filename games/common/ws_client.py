@@ -31,7 +31,7 @@ class WebSocketClient:
             while self.run:
                 message = self.websocket.recv()
                 self.handle_message(message)
-        except ConnectionClosed:
+        except:
             print("Connection closed unexpectedly. Reconnecting...")
             self.connect()
             self.receive_messages()
