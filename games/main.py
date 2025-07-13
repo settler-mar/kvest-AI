@@ -7,20 +7,20 @@ from common.controls import *
 
 # H = 780
 # W = 1240
-cams_hand_control = False
+cams_hand_control = True
 
 
 def init_cam(c):
-    if len(c) < 3:
-        return cv2.VideoCapture(int(c))
-    # url = f"http://{c}/Streaming/Channels/102/picture?snapShotImageType=JPEG"
-    # return url
-    url = f"rtsp://{c}/Streaming/Channels/102"
-    return cv2.VideoCapture(url, cv2.CAP_FFMPEG)
-    # cap = cv2.VideoCapture(0)
-    # cap.set(3, W)
-    # cam = cv2.VideoCapture("rtsp://admin:59Intelligence59@192.168.1.23:554/Streaming/Channels/102", cv2.CAP_FFMPEG)
-    # cap.set(4, H)
+  if len(c) < 3:
+    return cv2.VideoCapture(int(c))
+  # url = f"http://{c}/Streaming/Channels/102/picture?snapShotImageType=JPEG"
+  # return url
+  url = f"rtsp://{c}/Streaming/Channels/102"
+  return cv2.VideoCapture(url, cv2.CAP_FFMPEG)
+  # cap = cv2.VideoCapture(0)
+  # cap.set(3, W)
+  # cam = cv2.VideoCapture("rtsp://admin:59Intelligence59@192.168.1.23:554/Streaming/Channels/102", cv2.CAP_FFMPEG)
+  # cap.set(4, H)
 
 
 f = open("cams.txt", "r")
@@ -28,12 +28,12 @@ cams = []
 hand_cam = None
 i = 0
 for conf in f.read().split("\n"):
-    if cams:
-        cams.append(Camera((174, 350 + 380 * i), [init_cam(c) for c in conf.split(" ")], i % 2))
-        i = i + 1
-    else:
-        hand_cam = Camera(None, [init_cam(c) for c in conf.split(" ")], True)
-        hand_cam.handControl(False)
+  if cams:
+    cams.append(Camera((174, 350 + 380 * i), [init_cam(c) for c in conf.split(" ")], i % 2))
+    i = i + 1
+  else:
+    hand_cam = Camera(None, [init_cam(c) for c in conf.split(" ")], True)
+    hand_cam.handControl(False)
 
 timer = Timer((538, 1620), text="", fontFile='fonts/CodenameCoderFree4F-Bold.ttf', fontSize=200, color=(255, 0, 0),
               align=1)
@@ -47,151 +47,151 @@ txt_msg = Text((270, 1550), text="Копирование файлов\nна уд
 
 
 def create_capture_windows():
-    window_name = 'cam'
-    screen_id = 1
-    screen_cnt = len(screeninfo.get_monitors())
-    screen = screeninfo.get_monitors()[min(screen_cnt - 1, screen_id)]
+  window_name = 'cam'
+  screen_id = 1
+  screen_cnt = len(screeninfo.get_monitors())
+  screen = screeninfo.get_monitors()[min(screen_cnt - 1, screen_id)]
 
-    cv2.namedWindow('cam', cv2.WINDOW_AUTOSIZE)
-    cv2.setWindowProperty('cam', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+  cv2.namedWindow('cam', cv2.WINDOW_AUTOSIZE)
+  cv2.setWindowProperty('cam', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-    cv2.moveWindow(window_name, screen.x + screen.width - hand_cam.w, screen.y - 1)
-    cv2.resizeWindow(window_name, hand_cam.w, hand_cam.h)
-    hand_cam.handControl(True)
+  cv2.moveWindow(window_name, screen.x + screen.width - hand_cam.w, screen.y - 1)
+  cv2.resizeWindow(window_name, hand_cam.w, hand_cam.h)
+  hand_cam.handControl(True)
 
 
 def main():
-    screen_id = 4
-    screen_cnt = len(screeninfo.get_monitors())
+  screen_id = 4
+  screen_cnt = len(screeninfo.get_monitors())
 
-    screen = screeninfo.get_monitors()[min(screen_cnt - 1, screen_id)]
-    width = int(screen.width / 2)
-    # image_r = read_transparent_png("timer_bg.png")
-    image_r = cv2.imread("img/timer_bg.png")
-    img_h, img_w, _ = image_r.shape
-    print('timer_bg size', image_r.shape)
-    height = int(width * img_h / img_w)
-    print('screen position', screen, height, width)
+  screen = screeninfo.get_monitors()[min(screen_cnt - 1, screen_id)]
+  width = int(screen.width / 2)
+  # image_r = read_transparent_png("timer_bg.png")
+  image_r = cv2.imread("img/timer_bg.png")
+  img_h, img_w, _ = image_r.shape
+  print('timer_bg size', image_r.shape)
+  height = int(width * img_h / img_w)
+  print('screen position', screen, height, width)
 
-    window_name = 'projector'
-    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
-    cv2.moveWindow(window_name, screen.x - 1, screen.y - 1)
-    cv2.resizeWindow(window_name, width, height)
+  window_name = 'projector'
+  cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+  cv2.moveWindow(window_name, screen.x - 1, screen.y - 1)
+  cv2.resizeWindow(window_name, width, height)
 
-    # if cams_hand_control:
-    create_capture_windows()
+  # if cams_hand_control:
+  create_capture_windows()
 
-    # cv2.namedWindow(window_name, cv2.WND_PROP_FULLSCREEN)
-    # cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+  # cv2.namedWindow(window_name, cv2.WND_PROP_FULLSCREEN)
+  # cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
-    # cams[1].handControl(True)
-    circles = Circles((30, 1038))
-    while 1:
-        im = Image.open("img/timer_bg.png")
-        draw = ImageDraw.Draw(im)
+  # cams[1].handControl(True)
+  circles = Circles((30, 1038))
+  while 1:
+    im = Image.open("img/timer_bg.png")
+    draw = ImageDraw.Draw(im)
 
-        for cam in cams:
-            cam.renderText(draw)
-        txt_wrong.render(draw)
-        timer.render(draw)
-        txt_msg.render(draw)
+    for cam in cams:
+      cam.renderText(draw)
+    txt_wrong.render(draw)
+    timer.render(draw)
+    txt_msg.render(draw)
 
-        image = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
+    image = cv2.cvtColor(np.array(im), cv2.COLOR_RGB2BGR)
 
-        circles.render(image)
+    circles.render(image)
 
-        for cam in cams:
-            cam.render(image)
+    for cam in cams:
+      cam.render(image)
 
-        cv2.imshow(window_name, image)
+    cv2.imshow(window_name, image)
 
-        if cams_hand_control:
-            image = np.zeros((hand_cam.h, hand_cam.w, 3), np.uint8)
-            hand_cam.render(image)
-            cv2.imshow('cam', image)
+    if cams_hand_control:
+      image = np.zeros((hand_cam.h, hand_cam.w, 3), np.uint8)
+      hand_cam.render(image)
+      cv2.imshow('cam', image)
 
-        cv2.waitKey(1)
+    cv2.waitKey(1)
 
 
 class MyServer(BaseHTTPRequestHandler):
-    def do_GET(self):
-        global cams_hand_control
+  def do_GET(self):
+    global cams_hand_control
 
-        self.send_response(200)
-        self.send_header("Content-type", "text/html")
-        self.end_headers()
-        self.wfile.write(bytes("<html><head><title>https://pythonbasics.org</title></head>", "utf-8"))
-        self.wfile.write(bytes("<p>Request: %s</p>" % self.path, "utf-8"))
-        self.wfile.write(bytes("<body>", "utf-8"))
-        self.wfile.write(bytes("<p>This is an example web server.</p>", "utf-8"))
-        self.wfile.write(bytes("</body></html>", "utf-8"))
+    self.send_response(200)
+    self.send_header("Content-type", "text/html")
+    self.end_headers()
+    self.wfile.write(bytes("<html><head><title>https://pythonbasics.org</title></head>", "utf-8"))
+    self.wfile.write(bytes("<p>Request: %s</p>" % self.path, "utf-8"))
+    self.wfile.write(bytes("<body>", "utf-8"))
+    self.wfile.write(bytes("<p>This is an example web server.</p>", "utf-8"))
+    self.wfile.write(bytes("</body></html>", "utf-8"))
 
-        path = self.path.strip('/').split('/')
+    path = self.path.strip('/').split('/')
 
-        if path[0] == 'hand':
-            if path[1] == '1':
-                cams_hand_control = True
-                create_capture_windows()
-                print('hand control on')
-                requests.get(url='http://127.0.0.1:8080/esp/timer/hand:1')
-            if path[1] == '0':
-                cams_hand_control = False
-                hand_cam.handControl(False)
-                cv2.destroyWindow("cam")
-                print('hand control off')
-                requests.get(url='http://127.0.0.1:8080/esp/timer/hand:0')
-        if path[0] == 'reset':
-            cams_hand_control = False
-            hand_cam.handControl(False)
-            cv2.destroyWindow("cam")
-            print('hand control off')
-            requests.get(url='http://127.0.0.1:8080/esp/timer/hand:0')
+    if path[0] == 'hand':
+      if path[1] == '1':
+        cams_hand_control = True
+        create_capture_windows()
+        print('hand control on')
+        requests.get(url='http://127.0.0.1:8080/esp/timer/hand:1')
+      if path[1] == '0':
+        cams_hand_control = False
+        hand_cam.handControl(False)
+        cv2.destroyWindow("cam")
+        print('hand control off')
+        requests.get(url='http://127.0.0.1:8080/esp/timer/hand:0')
+    if path[0] == 'reset':
+      cams_hand_control = False
+      hand_cam.handControl(False)
+      cv2.destroyWindow("cam")
+      print('hand control off')
+      requests.get(url='http://127.0.0.1:8080/esp/timer/hand:0')
 
-        if path[0] == 'time':
-            if path[1] == 'pause':
-                timer.pause()
-            txt = re.search("[0-9][0-9]:[0-9][0-9]", path[1])
-            if txt:
-                timer.setTime(txt.string)
+    if path[0] == 'time':
+      if path[1] == 'pause':
+        timer.pause()
+      txt = re.search("[0-9][0-9]:[0-9][0-9]", path[1])
+      if txt:
+        timer.setTime(txt.string)
 
-        if path[0] == 'lang':
-            tr = {
-                'ru': [
-                    'ОБНАРУЖЕНО\nВТОРЖЕНИЕ',
-                    'Копирование файлов\nна удаленный сервер'
-                ], 'ua': [
-                    'ВИЯВЛЕНО\nВТОРГНЕННЯ',
-                    'Копіювання файлів\nна віддалений сервер'
-                ], 'en': [
-                    'DETECTED\nINVASION',
-                    'Copying files\nfor remote server'
-                ],
-            }.get(path[1])
-            if not tr:
-                return
+    if path[0] == 'lang':
+      tr = {
+        'ru': [
+          'ОБНАРУЖЕНО\nВТОРЖЕНИЕ',
+          'Копирование файлов\nна удаленный сервер'
+        ], 'ua': [
+          'ВИЯВЛЕНО\nВТОРГНЕННЯ',
+          'Копіювання файлів\nна віддалений сервер'
+        ], 'en': [
+          'DETECTED\nINVASION',
+          'Copying files\nfor remote server'
+        ],
+      }.get(path[1])
+      if not tr:
+        return
 
-            txt_wrong.text = tr[0]
-            txt_msg.text = tr[1]
+      txt_wrong.text = tr[0]
+      txt_msg.text = tr[1]
 
 
 def server():
-    hostName = "localhost"
-    serverPort = 8083
+  hostName = "localhost"
+  serverPort = 8083
 
-    webServer = HTTPServer((hostName, serverPort), MyServer)
-    print("Server started http://%s:%s" % (hostName, serverPort))
-    threading.Thread(target=webServer.serve_forever).start()
+  webServer = HTTPServer((hostName, serverPort), MyServer)
+  print("Server started http://%s:%s" % (hostName, serverPort))
+  threading.Thread(target=webServer.serve_forever).start()
 
 
 if __name__ == '__main__':
-    # import sys
-    #
-    # if sys.version_info.major == 3:
-    #     import tkinter as tk, tkinter.font as tk_font
-    # else:
-    #     import Tkinter as tk, tkFont as tk_font
-    # root = tk.Tk()
-    # print(tk_font.families())
-    # print(tk_font.names())
-    server()
-    main()
+  # import sys
+  #
+  # if sys.version_info.major == 3:
+  #     import tkinter as tk, tkinter.font as tk_font
+  # else:
+  #     import Tkinter as tk, tkFont as tk_font
+  # root = tk.Tk()
+  # print(tk_font.families())
+  # print(tk_font.names())
+  server()
+  main()
