@@ -223,8 +223,9 @@ document.addEventListener("keydown", direction);
 
 let level_hover = -1
 
-function drawButton(params) {
+function drawButton(params, tmp_ctx) {
   const {x, y, h, w, hover, text} = params;
+  tmp_ctx = tmp_ctx || ctx
 
   // ctx.clearRect(x, y, w, h); // Очищаем область кнопки
 
@@ -232,71 +233,72 @@ function drawButton(params) {
   const buttonFillColor = hover ? hoverColor : fillColor;
 
   if (hover) {
-    ctx.shadowColor = borderColor; // string Color of the shadow; RGB, RGBA, HSL, HEX, and other inputs are valid.
-    ctx.shadowOffsetX = 0; // integerHorizontal distance of the shadow, in relation to the text.
-    ctx.shadowOffsetY = 0; // integer Vertical distance of the shadow, in relation to the text.
-    ctx.shadowBlur = 15; // integer Blurring effect to the shadow, the larger the value, the greater the blur.
+    tmp_ctx.shadowColor = borderColor; // string Color of the shadow; RGB, RGBA, HSL, HEX, and other inputs are valid.
+    tmp_ctx.shadowOffsetX = 0; // integerHorizontal distance of the shadow, in relation to the text.
+    tmp_ctx.shadowOffsetY = 0; // integer Vertical distance of the shadow, in relation to the text.
+    tmp_ctx.shadowBlur = 15; // integer Blurring effect to the shadow, the larger the value, the greater the blur.
   }
   // Нарисовать прямоугольник кнопки
-  ctx.fillStyle = buttonFillColor;
-  ctx.strokeStyle = borderColor;
-  ctx.lineWidth = borderWidth;
-  ctx.beginPath();
-  ctx.moveTo(x + borderRadius, y);
-  ctx.lineTo(x + w - borderRadius, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + borderRadius);
-  ctx.lineTo(x + w, y + h - borderRadius);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - borderRadius, y + h);
-  ctx.lineTo(x + borderRadius, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - borderRadius);
-  ctx.lineTo(x, y + borderRadius);
-  ctx.quadraticCurveTo(x, y, x + borderRadius, y);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+  tmp_ctx.fillStyle = buttonFillColor;
+  tmp_ctx.strokeStyle = borderColor;
+  tmp_ctx.lineWidth = borderWidth;
+  tmp_ctx.beginPath();
+  tmp_ctx.moveTo(x + borderRadius, y);
+  tmp_ctx.lineTo(x + w - borderRadius, y);
+  tmp_ctx.quadraticCurveTo(x + w, y, x + w, y + borderRadius);
+  tmp_ctx.lineTo(x + w, y + h - borderRadius);
+  tmp_ctx.quadraticCurveTo(x + w, y + h, x + w - borderRadius, y + h);
+  tmp_ctx.lineTo(x + borderRadius, y + h);
+  tmp_ctx.quadraticCurveTo(x, y + h, x, y + h - borderRadius);
+  tmp_ctx.lineTo(x, y + borderRadius);
+  tmp_ctx.quadraticCurveTo(x, y, x + borderRadius, y);
+  tmp_ctx.closePath();
+  tmp_ctx.fill();
+  tmp_ctx.stroke();
 
-  ctx.font = '55px batman';
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'center';
+  tmp_ctx.font = '55px batman';
+  tmp_ctx.textBaseline = 'middle';
+  tmp_ctx.textAlign = 'center';
 
   // Выводим текст на кнопке
-  ctx.fillStyle = textColor;
-  ctx.fillText(text, x + w / 2 + 2, y + h / 2 + 4);
-  ctx.shadowBlur = 0
+  tmp_ctx.fillStyle = textColor;
+  tmp_ctx.fillText(text, x + w / 2 + 2, y + h / 2 + 4);
+  tmp_ctx.shadowBlur = 0
 }
 
-function drawInput({x, y, h, w, label, text}) {
+function drawInput({x, y, h, w, label, text}, tmp_ctx) {
   x = x - w
+  tmp_ctx = tmp_ctx || ctx
 
   // Нарисовать прямоугольник кнопки
-  ctx.fillStyle = fillColor;
-  ctx.strokeStyle = borderColor;
-  ctx.lineWidth = borderWidth;
-  ctx.beginPath();
-  ctx.moveTo(x + borderRadius, y);
-  ctx.lineTo(x + w - borderRadius, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + borderRadius);
-  ctx.lineTo(x + w, y + h - borderRadius);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - borderRadius, y + h);
-  ctx.lineTo(x + borderRadius, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - borderRadius);
-  ctx.lineTo(x, y + borderRadius);
-  ctx.quadraticCurveTo(x, y, x + borderRadius, y);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+  tmp_ctx.fillStyle = fillColor;
+  tmp_ctx.strokeStyle = borderColor;
+  tmp_ctx.lineWidth = borderWidth;
+  tmp_ctx.beginPath();
+  tmp_ctx.moveTo(x + borderRadius, y);
+  tmp_ctx.lineTo(x + w - borderRadius, y);
+  tmp_ctx.quadraticCurveTo(x + w, y, x + w, y + borderRadius);
+  tmp_ctx.lineTo(x + w, y + h - borderRadius);
+  tmp_ctx.quadraticCurveTo(x + w, y + h, x + w - borderRadius, y + h);
+  tmp_ctx.lineTo(x + borderRadius, y + h);
+  tmp_ctx.quadraticCurveTo(x, y + h, x, y + h - borderRadius);
+  tmp_ctx.lineTo(x, y + borderRadius);
+  tmp_ctx.quadraticCurveTo(x, y, x + borderRadius, y);
+  tmp_ctx.closePath();
+  tmp_ctx.fill();
+  tmp_ctx.stroke();
 
 
   // Написать текст
-  ctx.fillStyle = '#fff'; // Белый цвет текста
-  ctx.font = '40px batman';
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
-  ctx.fillText(text, x + 20, y + h / 2);
+  tmp_ctx.fillStyle = '#fff'; // Белый цвет текста
+  tmp_ctx.font = '40px batman';
+  tmp_ctx.textBaseline = 'middle';
+  tmp_ctx.textAlign = 'left';
+  tmp_ctx.fillText(text, x + 20, y + h / 2);
 
-  ctx.fillStyle = '#fff';
-  ctx.font = '35px batman';
-  ctx.fillText(lang_dict[t_lang][inputField.label.text].toUpperCase(), label.x, y + h / 2);
+  tmp_ctx.fillStyle = '#fff';
+  tmp_ctx.font = '35px batman';
+  tmp_ctx.fillText(lang_dict[t_lang][inputField.label.text].toUpperCase(), label.x, y + h / 2);
 }
 
 canvas.addEventListener('mousemove', function (event) {
@@ -652,13 +654,21 @@ function drawStaticIndication(ctx) {
 
 }
 
-function drawGame() {
+function draw_screen(render_ctx) {
   let tmp_canvas = document.createElement('canvas')
   tmp_canvas.width = canvas.width;
   tmp_canvas.height = canvas.height;
   let tmp_ctx = tmp_canvas.getContext("2d");
-  tmp_ctx.drawImage(m_canvas, 0, 0);
 
+  render_ctx(tmp_ctx)
+
+  ctx.drawImage(tmp_canvas, 0, 0);
+}
+
+function drawGame(tmp_ctx) {
+  if (m_canvas) {
+    tmp_ctx.drawImage(m_canvas, 0, 0);
+  }
   // ctx.drawImage(foodImg, (food.x + margin.w) * box, (food.y + margin.t) * box);
   //drawRotatedImage(tmp_ctx, foodImg, (food.x + margin.w + 0.5) * box, (food.y + margin.t + 0.5) * box, 90);
 
@@ -739,8 +749,6 @@ function drawGame() {
     can_remove: !first_eat
   };
 
-  ctx.drawImage(tmp_canvas, 0, 0);
-
   eatTail(newHead, snake);
 
   snake.unshift(newHead);
@@ -748,24 +756,25 @@ function drawGame() {
 }
 
 // Отрисовка меню
-function drawMenu() {
+function drawMenu(tmp_ctx) {
+  tmp_ctx = tmp_ctx || ctx
   set_active_screen('menu')
   // ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(ground, bg.pos.x, bg.pos.y);
+  tmp_ctx.drawImage(ground, bg.pos.x, bg.pos.y);
 
-  ctx.font = '20px Arial';
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'center';
+  tmp_ctx.font = '20px Arial';
+  tmp_ctx.textBaseline = 'middle';
+  tmp_ctx.textAlign = 'center';
 
   let item_y = (canvas.height - ((item_height + item_margin) * (foot_map.length + 1) + item_margin)) / 2
 
-  ctx.font = '55px batman';
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'center';
+  tmp_ctx.font = '55px batman';
+  tmp_ctx.textBaseline = 'middle';
+  tmp_ctx.textAlign = 'center';
 
   // Выводим текст на кнопке
-  ctx.fillStyle = textColor;
-  ctx.fillText(lang_dict[t_lang]['select_level'], canvas.width / 2, item_y);
+  tmp_ctx.fillStyle = textColor;
+  tmp_ctx.fillText(lang_dict[t_lang]['select_level'], canvas.width / 2, item_y);
   item_y += item_height + item_margin
 
   for (let i = 1; i <= foot_map.length; i++) {
@@ -776,7 +785,7 @@ function drawMenu() {
       w: item_width,
       hover: (i - 1) === level_hover,
       text: lang_dict[t_lang]['level'] + ' ' + i
-    })
+    }, tmp_ctx)
 
     item_y += item_height + item_margin
   }
@@ -810,7 +819,7 @@ const reset_level = function (go) {
     all_level_done = true
     setTimeout(ws_send, 500, 'finish', 1)
     canvas.classList.remove('no_cursor')
-    game = setInterval(drawMenu, 100);
+    game = setInterval(draw_screen, 100, drawMenu)
   } else {
     food = {
       x: foot_map[level][score][0],
@@ -818,7 +827,7 @@ const reset_level = function (go) {
     };
     ws_send('level_now', level + 1)
     init_game()
-    game = setInterval(drawGame, snake_interval[hard_level - 1]);
+    game = setInterval(draw_screen, snake_interval[hard_level - 1], drawGame);
   }
 }
 
@@ -870,9 +879,9 @@ const inputField = {
   }
 };
 
-function drawKeyboard() {
+function drawKeyboard(tmp_ctx) {
   set_active_screen('keyboard')
-  ctx.drawImage(ground, bg.pos.x, bg.pos.y);
+  tmp_ctx.drawImage(ground, bg.pos.x, bg.pos.y);
 
 
   const {x, y, w, h} = {
@@ -882,59 +891,56 @@ function drawKeyboard() {
     h: keyboardLayout[keyboardLayout.length - 1][0].y + keySize * 3 - inputField.y
   }
 
-  ctx.fillStyle = 'rgba(5, 5, 5, 0.2)'
-  ctx.strokeStyle = borderColor;
-  ctx.lineWidth = borderWidth;
-  ctx.beginPath();
-  ctx.moveTo(x + borderRadius, y);
-  ctx.lineTo(x + w - borderRadius, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + borderRadius);
-  ctx.lineTo(x + w, y + h - borderRadius);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - borderRadius, y + h);
-  ctx.lineTo(x + borderRadius, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - borderRadius);
-  ctx.lineTo(x, y + borderRadius);
-  ctx.quadraticCurveTo(x, y, x + borderRadius, y);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+  tmp_ctx.fillStyle = 'rgba(5, 5, 5, 0.2)'
+  tmp_ctx.strokeStyle = borderColor;
+  tmp_ctx.lineWidth = borderWidth;
+  tmp_ctx.beginPath();
+  tmp_ctx.moveTo(x + borderRadius, y);
+  tmp_ctx.lineTo(x + w - borderRadius, y);
+  tmp_ctx.quadraticCurveTo(x + w, y, x + w, y + borderRadius);
+  tmp_ctx.lineTo(x + w, y + h - borderRadius);
+  tmp_ctx.quadraticCurveTo(x + w, y + h, x + w - borderRadius, y + h);
+  tmp_ctx.lineTo(x + borderRadius, y + h);
+  tmp_ctx.quadraticCurveTo(x, y + h, x, y + h - borderRadius);
+  tmp_ctx.lineTo(x, y + borderRadius);
+  tmp_ctx.quadraticCurveTo(x, y, x + borderRadius, y);
+  tmp_ctx.closePath();
+  tmp_ctx.fill();
+  tmp_ctx.stroke();
 
-  ctx.beginPath();
-  ctx.moveTo(x, y + h * 0.2);
-  ctx.lineTo(0, y + h * 0.2);
-  ctx.moveTo(x, y + h * 0.65);
-  ctx.lineTo(0, y + h * 0.65);
-  ctx.moveTo(x, y + h * 0.85);
-  ctx.lineTo(0, y + h * 0.85);
+  tmp_ctx.beginPath();
+  tmp_ctx.moveTo(x, y + h * 0.2);
+  tmp_ctx.lineTo(0, y + h * 0.2);
+  tmp_ctx.moveTo(x, y + h * 0.65);
+  tmp_ctx.lineTo(0, y + h * 0.65);
+  tmp_ctx.moveTo(x, y + h * 0.85);
+  tmp_ctx.lineTo(0, y + h * 0.85);
 
-  ctx.moveTo(x + w, y + h * 0.35);
-  ctx.lineTo(canvas.width, y + h * 0.35);
-  ctx.moveTo(x + w, y + h * 0.55);
-  ctx.lineTo(canvas.width, y + h * 0.55);
-  ctx.closePath()
-  ctx.stroke()
+  tmp_ctx.moveTo(x + w, y + h * 0.35);
+  tmp_ctx.lineTo(canvas.width, y + h * 0.35);
+  tmp_ctx.moveTo(x + w, y + h * 0.55);
+  tmp_ctx.lineTo(canvas.width, y + h * 0.55);
+  tmp_ctx.closePath()
+  tmp_ctx.stroke()
 
 
-  ctx.font = '30px batman';
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'center';
+  tmp_ctx.font = '30px batman';
+  tmp_ctx.textBaseline = 'middle';
+  tmp_ctx.textAlign = 'center';
 
   // Отрисовка клавиш
   for (let row = 0; row < keyboardLayout.length; row++) {
     for (let col = 0; col < keyboardLayout[row].length; col++) {
-      drawButton(keyboardLayout[row][col])
+      drawButton(keyboardLayout[row][col], tmp_ctx)
     }
   }
 
-  drawInput(inputField)
+  drawInput(inputField, tmp_ctx)
 }
 
-reset_level(true)
 
-// reset_level(true)
-
-// game = setInterval(drawMenu, 50);
-game = setInterval(drawKeyboard, 50);
+// game = setInterval(draw_screen, 50, drawMenu);
+game = setInterval(draw_screen, 50, drawKeyboard);
 
 setTimeout(ws_send, 500, 'hard_level', hard_level)
 setTimeout(ws_send, 500, 'pass_ok', 0)
