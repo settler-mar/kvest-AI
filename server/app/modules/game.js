@@ -79,7 +79,15 @@ module.exports = (config) => {
     const fs = require('fs');
     const path = require('path');
     const displayPath = path.join(__dirname, '../../display.json');
-    fs.writeFileSync(displayPath, JSON.stringify(global.game.display, null, 2))
+    let out_display = []
+    let display_names = []
+    for (let el of game.display) {
+      if (el.name && display_names.indexOf(el.name) < 0) {
+        display_names.push(el.name)
+        out_display.push(el)
+      }
+    }
+    fs.writeFileSync(displayPath, JSON.stringify(out_display, null, 2))
 
     game.status = 0;
     update_game()
