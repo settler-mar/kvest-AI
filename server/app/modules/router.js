@@ -112,17 +112,13 @@ module.exports.init = (app, config) => {
   })
 
   app.post('/display', function (req, res) {
-    let is_find = false;
     for (let scr in global.game.display) {
       if (global.game.display[scr].name === req.body.name) {
         global.game.display.splice(scr, 1);
-        is_find = true;
         break;
       }
     }
-    if (!is_find) {
       global.game.display.push(req.body)
-    }
     const fs = require('fs');
     const path = require('path');
     const displayPath = path.join(__dirname, '../../display.json');

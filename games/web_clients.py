@@ -16,8 +16,10 @@ from selenium.webdriver.common.keys import Keys
 import requests
 import tkinter as tk
 import json
+from selenium.common.exceptions import StaleElementReferenceException
 
-host='127.0.0.1'
+host = '127.0.0.1'
+
 
 class Display:
   body = None
@@ -66,18 +68,24 @@ class Display:
       Keys.RIGHT: ['ArrowRight', 39, Keys.ARROW_RIGHT],
     }[key]
     print('key press', key_name, key_code)
-    self.body.send_keys(key)
-    self.body.send_keys(arrow)
-    js = f"""const event = new KeyboardEvent('keydown', {{
-                  key: '{key_name}',
-                  code: '{key_name},
-                  keyCode: {key_code},
-                  which: {key_code},
-                  bubbles: true,
-                }});
-                document.dispatchEvent(event);"""
-    # self.driver.execute_script(js)
-    self.actions.send_keys(arrow).perform()
+    if not self.body:
+      self.body = self.driver.find_element(By.TAG_NAME, 'body')
+    try:
+      self.body.send_keys(key)
+      self.body.send_keys(arrow)
+      js = f"""const event = new KeyboardEvent('keydown', {{
+                    key: '{key_name}',
+                    code: '{key_name},
+                    keyCode: {key_code},
+                    which: {key_code},
+                    bubbles: true,
+                  }});
+                  document.dispatchEvent(event);"""
+      # self.driver.execute_script(js)
+      self.actions.send_keys(arrow).perform()
+    except StaleElementReferenceException:
+      print("StaleElementReferenceException: Reacquiring body element...")
+      self.body = None
 
 
 class MouseControl:
@@ -120,11 +128,11 @@ class MouseControl:
     self.client = client
 
   def get_display_data(self):
-    has_connect=True
+    has_connect = True
     try:
       display_data = requests.get(f"http://{host}:8080/display").json()
     except:
-      has_connect=False
+      has_connect = False
       display_data = {}
 
     display_data = {data.host: data.display for data in display_data if 'host' in display_data}
