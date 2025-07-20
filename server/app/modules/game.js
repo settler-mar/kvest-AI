@@ -3,7 +3,7 @@ global.game = {
   timer: "",
   time: 0,
   game_time: 60 * 60,
-  lang: 'ru',
+  lang: 'ua',
   device_game: 0,
   display: []
 }

@@ -16,17 +16,17 @@
               <td><input v-model="d.display" type="number" min="0" max="6"/></td>
             </tr>
           </table>
-          <button v-on:click="saveDisplay">Сохранить</button>
-          <button v-on:click="cancelDisplay">Отменить</button>
+          <button v-on:click="saveDisplay">Зберегти</button>
+          <button v-on:click="cancelDisplay">Відміна</button>
         </div>
         <button v-on:click="evStart" v-if="game.status==0">Старт</button>
         <button v-on:click="evStop" v-if="game.status==1 || game.status==2">Стоп</button>
-        <button v-on:click="evStart" v-if="game.status==2">Продолжить</button>
+        <button v-on:click="evStart" v-if="game.status==2">Продовжити</button>
         <button v-on:click="evPause" v-if="game.status==1">Пауза</button>
         <button v-on:click="evAddTime" v-if="game.status==1 || game.status==2">+5min</button>
       </span>
       <div>
-        Язык игры
+        Мова
         <select v-on:change="setLang" v-model="game.lang">
           <option value="ru">Рус</option>
           <option value="ua">Укр</option>
@@ -35,7 +35,7 @@
       </div>
 
       <div>
-        Активная игры
+        Активна гра
         <select v-model="game.device_game" v-on:change="setGame">
           <option value="1">Вентиляция</option>
           <option value="2">Взлом двери</option>

@@ -13,9 +13,13 @@ from time import sleep
 from threading import Thread
 import json
 
+# Настройка
+video_path = "video/cutscene.mp4"
+video_loop_path = "video/loop.mp4"
+
 # для активации управления нажимаем кнопку вниз
 on_config = False  # Если True, то управление клавиатурой включено
-print_pos = True
+print_pos = False
 
 # https://github.com/fandhikazhr/handDetector
 # Для винды
@@ -255,7 +259,8 @@ class Sputnik:
 
   def take(self, is_user, is_this):
     if self.game_run:
-      d_angel = [[180, 45], [145, 50], [160, 30]][hard_level - 1][is_user]
+      # [user speed, AI speed]
+      d_angel = [[270, 30], [180, 45], [145, 50]][hard_level - 1][is_user]
       direct = (random.randint(0, 1) * 2 - 1)
       if xor(is_user, is_this):
         self.angle = self.angle_ai or (self.user_angle + direct * d_angel)
@@ -336,6 +341,7 @@ class ImageClass:
 
 
 class GameClass:
+  lang = 'ua'
   running = 0
   hand_control = 0
   H = 765
@@ -369,9 +375,47 @@ class GameClass:
     # cursor_img = pygame.image.load('img/cursor2.png')
     pygame.mouse.set_visible(False)
     pygame.font.init()
+    pygame.mixer.init()
 
     self.select_img = pygame.image.load("img/select.png").convert_alpha()
     self.select_img = pygame.transform.smoothscale(self.select_img, self.select_img.get_size())
+
+  def play_video(self, file_path: str, loop: bool = False):
+    video = cv2.VideoCapture(file_path)
+    if not video.isOpened():
+      print("Ошибка: не удалось открыть видео.")
+      return
+    else:
+      print(f"Видео {file_path} успешно открыто.")
+
+    # Получение FPS
+    fps = video.get(cv2.CAP_PROP_FPS)
+    clock = pygame.time.Clock()
+
+    # Основной цикл воспроизведения видео
+    while self.running:
+      ret, frame = video.read()
+      if not ret:  # Конец видео
+        if loop:
+          video.set(cv2.CAP_PROP_POS_FRAMES, 0)
+          print('Видео зациклено, воспроизведение начинается сначала.')
+          continue
+        else:
+          break
+
+      # Обработка событий
+      for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+          self.running = False
+          break
+
+      # Конвертация и отображение кадра
+      frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+      frame_surface = pygame.surfarray.make_surface(frame.swapaxes(0, 1))
+      self.sc.blit(frame_surface, (0, 0))
+      pygame.display.update()
+
+      clock.tick(fps)
 
   def reset(self):
     self.running = 0
@@ -382,13 +426,13 @@ class GameClass:
               img_params={'width': 129, 'height': 156, 'angle': -90}),
       Sputnik(211, 397, angle=110, user_angle=144),
       Sputnik(257, 194, angle=170, user_angle=25),
-      Sputnik(620, 68, angle=200, user_angle=190, angle_ai=100),
-      Sputnik(724, 337, angle=110, user_angle=25),
-      Sputnik(1085, 170, angle=205, user_angle=280),
-      Sputnik(1161, 543,
-              angle=100, user_angle=143,
-              filename='sattelite_plate.png', scale=1,
-              img_params={'width': 129, 'height': 156, 'angle': -90}),
+      # Sputnik(620, 68, angle=200, user_angle=190, angle_ai=100),
+      # Sputnik(724, 337, angle=110, user_angle=25),
+      # Sputnik(1085, 170, angle=205, user_angle=280),
+      # Sputnik(1161, 543,
+      #         angle=100, user_angle=143,
+      #         filename='sattelite_plate.png', scale=1,
+      #         img_params={'width': 129, 'height': 156, 'angle': -90}),
     ]
 
     self.sputniks[0].set_active(True)
@@ -539,6 +583,13 @@ class GameClass:
         except Exception as e:
           print(f"[WebSocket] Error sending take: {e}")
         sputnik.take(is_user, True)
+        if p_index is None or 2 * index - p_index >= len(self.sputniks):
+          pygame.mixer.music.load(f'mp3/{self.lang}.mp3'.lower())
+          pygame.mixer.music.play()
+          self.play_video(video_path)
+          pygame.mixer.music.stop()
+          self.play_video(video_loop_path, loop=True)
+          return False
         self.sputniks[2 * index - p_index].take(is_user, False)
         return True
 
@@ -683,6 +734,7 @@ class MainClass:
     message_handlers = {
       "command": self.command,
       "status": self.status,
+      "game": self.game_control,
     }
     address = "ws://127.0.0.1:8080"
 
@@ -700,6 +752,23 @@ class MainClass:
   def command(self, message):
     if message in ['restart', 'reset']:
       self.restart_game()
+    else:
+      print(f'>>> Unknown command: {message}')
+      return
+
+  def game_control(self, data):
+    if isinstance(data, str):
+      try:
+        data = json.loads(data)
+      except json.JSONDecodeError:
+        print(f'>>> Error decoding JSON: {data}')
+        return
+    if 'lang' in data:
+      self.game.lang = data['lang']
+      print(f'>>> Set lang to {self.game.lang}')
+    else:
+      self.game.lang = 'ua'
+      print('>>> No lang in data, set to default "ua"')
 
   def status(self, data):
     global hard_level
@@ -707,7 +776,7 @@ class MainClass:
     if 'finish_4' in status.get('hackDevice', {}):
       self.game and self.game.active_control()
 
-    if 'hard_level' in status.get('hackDevice', {}) and hard_level != int(status['hard_level']):
+    elif 'hard_level' in status.get('hackDevice', {}) and hard_level != int(status['hard_level']):
       hard_level = status['hard_level']
 
   def run(self):

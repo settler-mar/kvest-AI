@@ -65,7 +65,7 @@ module.exports = [
   {
     'code': 'satellite',
     'name': 'Спутники',
-    'has_lang': false,
+    'has_lang': true,
     'send': require("./app/processor/satellite.js"),
   }
 ];
