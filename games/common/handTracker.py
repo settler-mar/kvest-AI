@@ -5,6 +5,14 @@ import pygame
 import math
 
 
+def find_first_available_camera(max_index=10):
+  for index in range(max_index):
+    cap = cv2.VideoCapture(index)
+    if cap is not None and cap.isOpened():
+      return cap  # Возвращаем открытый объект VideoCapture
+  return None  # Камеры не найдены
+
+
 class handTracker():
   height = 240
   width = 320
@@ -12,7 +20,10 @@ class handTracker():
 
   def __init__(self, mode=False, maxHands=1, detectionCon=0.8, modelComplexity=1, trackCon=0.8, sc=None,
                sc_h=None, sc_w=None):
-    self.cap = cv2.VideoCapture(0)
+    self.cap = find_first_available_camera()
+
+    if self.cap is None:
+      raise RuntimeError("Не удалось найти доступную веб-камеру.")
 
     self.mode = mode
     self.maxHands = maxHands

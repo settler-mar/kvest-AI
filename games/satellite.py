@@ -426,13 +426,13 @@ class GameClass:
               img_params={'width': 129, 'height': 156, 'angle': -90}),
       Sputnik(211, 397, angle=110, user_angle=144),
       Sputnik(257, 194, angle=170, user_angle=25),
-      # Sputnik(620, 68, angle=200, user_angle=190, angle_ai=100),
-      # Sputnik(724, 337, angle=110, user_angle=25),
-      # Sputnik(1085, 170, angle=205, user_angle=280),
-      # Sputnik(1161, 543,
-      #         angle=100, user_angle=143,
-      #         filename='sattelite_plate.png', scale=1,
-      #         img_params={'width': 129, 'height': 156, 'angle': -90}),
+      Sputnik(620, 68, angle=200, user_angle=190, angle_ai=100),
+      Sputnik(724, 337, angle=110, user_angle=25),
+      Sputnik(1085, 170, angle=205, user_angle=280),
+      Sputnik(1161, 543,
+              angle=100, user_angle=143,
+              filename='sattelite_plate.png', scale=1,
+              img_params={'width': 129, 'height': 156, 'angle': -90}),
     ]
 
     self.sputniks[0].set_active(True)
