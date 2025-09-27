@@ -13,6 +13,9 @@ from time import sleep
 from threading import Thread
 import json
 
+# Создание окна
+WIDTH, HEIGHT = 1360, 765
+
 # Настройка
 video_path = "video/cutscene.mp4"
 video_loop_path = "video/loop.mp4"
@@ -344,8 +347,8 @@ class GameClass:
   lang = 'ua'
   running = 0
   hand_control = 0
-  H = 765
-  W = 1360
+  W = WIDTH
+  H = HEIGHT
   game_starting = 10
   images = {
     'earth': ImageClass(filename='img/earth.png', x=900, y=500, scale=1),
@@ -747,7 +750,7 @@ class MainClass:
     else:
       self.game = GameClass(self.client)
     self.game.reset()
-    Thread(target=self.game.game).start()
+    self.game.game()
 
   def command(self, message):
     if message in ['restart', 'reset']:
@@ -780,8 +783,8 @@ class MainClass:
       hard_level = status['hard_level']
 
   def run(self):
-    self.restart_game()
     self.client.start()
+    self.restart_game()
 
 
 if __name__ == '__main__':

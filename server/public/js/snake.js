@@ -92,7 +92,11 @@ function ws_start() {
 
       if (key === 'game') {
         app.game = JSON.parse(data)
-        if (app.game['lang']) t_lang = app.game['lang']
+        if (app.game['lang'] && app.game['lang'] !== t_lang) {
+          t_lang = app.game['lang']
+          // Обновляем изображения документов при смене языка
+          updateDocumentImages()
+        }
         return
       }
 
@@ -108,6 +112,35 @@ function ws_start() {
             clearInterval(game)
           }
           set_active_screen('locked')
+        }
+        return
+      }
+
+      if (key === 'documents') {
+        // Активация экрана документов после завершения игры спутников
+        if (game) {
+          clearInterval(game)
+        }
+        set_active_screen('documents')
+        game = setInterval(draw_screen, 50, drawDocuments)
+        return
+      }
+
+      if (key === 'close_documents') {
+        // Закрытие экрана документов по команде с сервера
+        if (active_screen === 'documents' && game) {
+          clearInterval(game)
+          set_active_screen('game')
+          game = setInterval(draw_screen, 50, drawKeyboard)
+        }
+        return
+      }
+
+      if (key === 'document_page') {
+        // Переключение страницы документа по команде с сервера
+        const page = parseInt(data)
+        if (page >= 0 && page < maxDocumentPages) {
+          currentDocumentPage = page
         }
         return
       }
@@ -159,6 +192,61 @@ const lang_dict = {
   }
 }
 
+// Переменные для экрана документов
+let currentDocumentPage = 0
+let documentImages = []
+let documentFrameImages = []
+let maxDocumentPages = 8
+let documentHoverButton = -1
+
+// Параметры для генерации сетки кнопок
+const documentButtonConfig = {
+  // Координаты левого верхнего угла первой кнопки (в процентах)
+  startX: 0.011,  
+  startY: 425/1078,
+  
+  // Размеры кнопки (в процентах)
+  buttonWidth: 633/1920, 
+  buttonHeight: 81/1078, 
+  
+  // Расстояние между кнопками (в процентах)
+  spacingY: (979-425)/1078/6,
+  
+  // Количество кнопок
+  buttonCount: 7
+}
+
+// Функция генерации координат кнопок
+function generateButtonGrid() {
+  const buttons = []
+  for (let i = 0; i < documentButtonConfig.buttonCount; i++) {
+    buttons.push({
+      x: documentButtonConfig.startX,
+      y: documentButtonConfig.startY + (i * documentButtonConfig.spacingY),
+      w: documentButtonConfig.buttonWidth,
+      h: documentButtonConfig.buttonHeight
+    })
+  }
+  return buttons
+}
+
+// Функция для обновления координат кнопок (можно вызвать для изменения параметров)
+function updateButtonGrid() {
+  documentButtonAreas.menuButtons = generateButtonGrid()
+  console.log('Button grid updated:', documentButtonAreas.menuButtons)
+  
+  // Выводим детальную информацию о координатах
+  documentButtonAreas.menuButtons.forEach((button, index) => {
+    console.log(`Button ${index}: x=${button.x}, y=${button.y}, w=${button.w}, h=${button.h}`)
+  })
+}
+
+// Области кнопок на картинке (координаты в процентах от размера экрана)
+const documentButtonAreas = {
+  // Кнопки меню слева - генерируются автоматически
+  menuButtons: generateButtonGrid()
+}
+
 // const canvas = document.getElementById("game");
 const canvas = document.createElement('canvas')
 const video = document.getElementById('video')
@@ -208,6 +296,34 @@ const snakeImgY = new Image();
 snakeImgY.src = 'img/tilo_yellow_zmii.png'
 const snakeImgR = new Image();
 snakeImgR.src = 'img/tilo_red_zmii.png'
+
+// Инициализация изображений документов
+function initDocumentImages() {
+  // Загружаем изображения страниц документов
+  for (let i = 0; i < maxDocumentPages; i++) {
+    const img = new Image();
+    img.src = `img/documents/${t_lang}/snake_${String(i).padStart(3, '0')}.png`;
+    documentImages.push(img);
+  }
+  
+  // Загружаем только Frame_buttons.png для обводки кнопок
+  const frameImg = new Image();
+  frameImg.src = 'img/documents/Frame_buttons.png';
+  documentFrameImages.push(frameImg);
+}
+
+// Инициализируем изображения документов
+initDocumentImages();
+
+// Функция для обновления изображений документов при смене языка
+function updateDocumentImages() {
+  documentImages = []
+  for (let i = 0; i < maxDocumentPages; i++) {
+    const img = new Image();
+    img.src = `img/documents/${t_lang}/snake_${String(i).padStart(3, '0')}.png`;
+    documentImages.push(img);
+  }
+}
 
 
 const display_size = {
@@ -342,6 +458,30 @@ canvas.addEventListener('mousemove', function (event) {
       if (keyboardLayout[row][col].hover) hoverKey = keyboardLayout[row][col].text
     }
   }
+  
+  // Обработка наведения для экрана документов
+  if (active_screen === 'documents') {
+    documentHoverButton = -1
+    
+    // Проверяем наведение на кнопки меню слева
+    for (let i = 0; i < documentButtonAreas.menuButtons.length; i++) {
+      const button = documentButtonAreas.menuButtons[i]
+      const buttonX = button.x * canvas.width
+      const buttonY = button.y * canvas.height
+      const buttonW = button.w * canvas.width
+      const buttonH = button.h * canvas.height
+      
+      console.log(`Checking button ${i}: mouse(${x},${y}) vs button(${buttonX},${buttonY},${buttonW},${buttonH})`)
+      
+      if (x >= buttonX && x <= buttonX + buttonW && y >= buttonY && y <= buttonY + buttonH) {
+        documentHoverButton = i
+        console.log(`FOUND HOVER button ${i}: x=${x}, y=${y}, buttonX=${buttonX}, buttonY=${buttonY}, buttonW=${buttonW}, buttonH=${buttonH}`)
+        break
+      }
+    }
+    
+    // Убираем кнопки в правой части экрана - они не нужны
+  }
 });
 
 canvas.addEventListener('mousedown', function (event) {
@@ -386,11 +526,33 @@ canvas.addEventListener('mousedown', function (event) {
       ws_send('login', inputField.text)
     }
   }
+  
+  if (active_screen === 'documents') {
+    console.log(`Click on documents screen, hoverButton: ${documentHoverButton}`)
+    console.log(`Current page before click: ${currentDocumentPage}`)
+    
+    // Обработка кликов на кнопки меню (0-6)
+    if (documentHoverButton >= 0 && documentHoverButton <= 6) {
+      // Переключение на соответствующую страницу документа
+      const newPage = documentHoverButton
+      console.log(`Clicking button ${documentHoverButton}, switching to page ${newPage}`)
+      currentDocumentPage = newPage + 1
+      console.log(`Current page after click: ${currentDocumentPage}`)
+      ws_send('document_page', currentDocumentPage)
+    }
+    // Убираем обработку кликов на кнопки в правой части
+  }
 })
 
 let dir;
 
 function direction(event) {
+  // Обработка навигации для экрана документов
+  if (active_screen === 'documents') {
+    // Навигация только через кнопки на картинке, клавиатура не используется
+    return
+  }
+  
   if (first_eat && !energy) return;
 
   if (change_dir_timer > new Date().getTime()) return;
@@ -796,6 +958,11 @@ const reset_level = function (go) {
   video.style.display = 'none'
   video.pause()
   canvas.classList.add('no_cursor')
+  
+  // Сброс состояния экрана документов
+  currentDocumentPage = 0
+  documentHoverButton = -1
+  
   if (game) {
     if (max_level < level) {
       max_level = level
@@ -938,10 +1105,123 @@ function drawKeyboard(tmp_ctx) {
   drawInput(inputField, tmp_ctx)
 }
 
+// Функция отрисовки экрана документов
+function drawDocuments(tmp_ctx) {
+  set_active_screen('documents')
+  tmp_ctx = tmp_ctx || ctx
+  
+  // Отрисовываем текущую страницу документа на весь экран
+  if (documentImages[currentDocumentPage] && documentImages[currentDocumentPage].complete) {
+    tmp_ctx.drawImage(documentImages[currentDocumentPage], 0, 0, canvas.width, canvas.height);
+    console.log(`Document image ${currentDocumentPage} drawn successfully`)
+  } else {
+    console.log(`Document image ${currentDocumentPage} not ready:`, 
+                documentImages[currentDocumentPage] ? 'not complete' : 'not found')
+  }
+  
+  // Отладочная информация
+  console.log(`Drawing page ${currentDocumentPage}, hover button: ${documentHoverButton}`)
+  
+  // Отрисовываем обводку при наведении на кнопки (но не на активный пункт)
+  if (documentHoverButton >= 0) {
+    // Не подсвечиваем активный пункт меню
+    if (!(documentHoverButton >= 0 && documentHoverButton <= 6 && documentHoverButton === (currentDocumentPage - 1))) {
+      let buttonArea = null
+      
+      // Определяем область кнопки (только кнопки меню слева)
+      if (documentHoverButton >= 0 && documentHoverButton <= 6) {
+        // Кнопки меню
+        buttonArea = documentButtonAreas.menuButtons[documentHoverButton]
+      }
+      
+      // Отрисовываем обводку
+      if (buttonArea && documentFrameImages[0] && documentFrameImages[0].complete) {
+        const buttonX = buttonArea.x * canvas.width
+        const buttonY = buttonArea.y * canvas.height
+        const buttonW = buttonArea.w * canvas.width
+        const buttonH = buttonArea.h * canvas.height
+        
+        // Растягиваем Frame_buttons.png на размер кнопки
+        tmp_ctx.drawImage(documentFrameImages[0], buttonX, buttonY, buttonW, buttonH)
+      }
+    }
+  }
+  
+  // Добавляем текст и динамический элемент в верхней правой части
+  drawDocumentHeader(tmp_ctx)
+}
+
+// Функция отрисовки заголовка документа с динамическим элементом
+function drawDocumentHeader(tmp_ctx) {
+  console.log('Drawing document header for page:', currentDocumentPage)
+  
+  // Позиция текста в верхней правой части (поднимаем на 20px выше)
+  const headerX = canvas.width * 0.52  // 52% от ширины
+  const headerY = canvas.height * 0.02 - 20 // 2% от высоты минус 20px (поднято выше)
+  const headerW = canvas.width * 0.46  // 46% от ширины
+  const headerH = canvas.height * 0.08 // 8% от высоты
+  
+  // Динамический элемент слева от текста (меньше по высоте, выровнен по нижнему краю)
+  const dynamicW = 200 // Ширина для большего количества полосок
+  const dynamicH = 25 // Меньше по высоте (фиксированная высота)
+  const dynamicX = headerX - dynamicW - 20 // Слева от текста с отступом
+  
+  // Смещение вправо на половину блока анимации
+  const shiftRight = dynamicW / 2
+  const adjustedHeaderX = headerX + shiftRight
+  const adjustedDynamicX = dynamicX + shiftRight
+  
+  // Основной текст (статичный как на 1-й картинке)
+  tmp_ctx.fillStyle = '#86DAFF'
+  tmp_ctx.font = '32px batman'
+  tmp_ctx.textAlign = 'left'
+  tmp_ctx.textBaseline = 'middle'
+  
+  // Статичный текст как на первой картинке
+  const headerText = 'TE88687-4T. 56T/NYUR 5679-456'
+  const textY = headerY + headerH/2
+  tmp_ctx.fillText(headerText, adjustedHeaderX, textY)
+  
+  // Выравниваем по нижнему краю текста
+  const dynamicY = textY + 16 - dynamicH // 16 - примерно половина высоты текста
+  drawDynamicHeaderElement(tmp_ctx, adjustedDynamicX, dynamicY, dynamicW, dynamicH)
+}
+
+// Функция отрисовки динамического элемента заголовка
+function drawDynamicHeaderElement(tmp_ctx, x, y, w, h) {
+  tmp_ctx.fillStyle = '#86DAFF'
+  let ts = new Date().getTime() / 115 // Ускоренная анимация на 30% (150 / 1.3 ≈ 115)
+  
+  // Рисуем анимированные вертикальные полоски (больше полосок)
+  const barCount = 20 // Количество полосок
+  const baseBarWidth = Math.floor(w / barCount) - 1 // Базовая ширина полоски с отступом
+  const barWidth = Math.floor(baseBarWidth * 0.7) // Ширина полоски 70% от текущей
+  
+  for (let i = 0; i < barCount; i++) {
+    // Создаем сложный сигнал из множества гармоник
+    let signal = 0
+    signal += Math.sin(ts * 0.005 + i * 0.3) * 0.4 // Основная гармоника
+    signal += Math.sin(ts * 0.023 + i * 0.7) * 0.3 // 2-я гармоника
+    signal += Math.cos(ts * 0.017 + i * 0.5) * 0.2 // 3-я гармоника
+    signal += Math.sin(ts * 0.031 + i * 0.9) * 0.15 // 4-я гармоника
+    signal += Math.cos(ts * 0.041 + i * 1.1) * 0.1 // 5-я гармоника
+    signal += Math.sin(ts * 0.053 + i * 1.3) * 0.08 // 6-я гармоника
+    signal += Math.cos(ts * 0.067 + i * 1.7) * 0.05 // 7-я гармоника
+    
+    // Нормализуем и получаем высоту
+    let height = Math.abs(signal) * h * 0.95
+    
+    // Центрируем полоску в своей области
+    const barX = x + i * (w / barCount) + (baseBarWidth - barWidth) / 2
+    tmp_ctx.fillRect(barX, y + h - height, barWidth, height)
+  }
+}
+
 //reset_level(true)
 
 // game = setInterval(draw_screen, 50, drawMenu);
-game = setInterval(draw_screen, 50, drawKeyboard);
+// game = setInterval(draw_screen, 50, drawKeyboard);
+game = setInterval(draw_screen, 50, drawDocuments);
 
 setTimeout(ws_send, 500, 'hard_level', hard_level)
 setTimeout(ws_send, 500, 'pass_ok', 0)

@@ -7,6 +7,7 @@
  * - reset - сброс в стартовое состояние
  * - name - вернет имя
  * - finish - перевести в коненое состояние 
+ * - open - включить реле на 3 секунды
  *
  * Сообщения состояния
  * - start - завпуск контроллера
@@ -24,6 +25,7 @@ String inData;
 IRsend IrSender; //on 3 pin
 #define UP_PIN 10 // реле для подъема шприца
 #define DOWN_PIN 11 // реле для спуска шприца
+#define RELAY_PIN 12 // реле на пине 12
 #define CC_PIN 7 // Пин контроля тока
 #define LED1_PIN 9 // Пин для индикатора "LOW POWER"
 #define LED2_PIN 8 // Пин для индикатора "NO DATA"
@@ -75,6 +77,12 @@ byte inj_progress = 0; // блоков в шприце
 void stop() {
   digitalWrite(UP_PIN, HIGH);
   digitalWrite(DOWN_PIN, HIGH);
+}
+
+void activateRelay() {
+  digitalWrite(RELAY_PIN, LOW); // Включаем реле (активный низкий уровень)
+  delay(3000); // Ждем 3 секунды
+  digitalWrite(RELAY_PIN, HIGH); // Выключаем реле
 }
 
 void move(bool is_up) {
@@ -245,7 +253,7 @@ void demo() { // Режим диагностики
 }
 
 void start_state() { // Установить начатьное состояние
-  digitalWrite(12, HIGH);
+  digitalWrite(RELAY_PIN, HIGH); // Выключаем реле
   digitalWrite(13, HIGH);
   stop();
   digitalWrite(LED1_PIN, LOW);
@@ -267,6 +275,7 @@ void start_state() { // Установить начатьное состояни
 }
 
 void reset() {
+  activateRelay(); // Включаем реле на 3 секунды при перезапуске
   move(true);
   mode = 1;
   //Serial.println("Start DEMO");
@@ -292,7 +301,8 @@ void setup() {
   pinMode(CC_PIN, INPUT);
   digitalWrite(CC_PIN, LOW);
 
-  pinMode(12, OUTPUT);
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, HIGH); // Выключаем реле по умолчанию
   pinMode(13, OUTPUT);
 
   LEDS.addLeds<LED_TYPE, WS_PIN, COLOR_ORDER>(leds, WS_COUNT);
@@ -336,6 +346,9 @@ void readSerial() {
       else if (inData.startsWith("down")) {
         mode = 0;
         move(false);
+      }
+      else if (inData.startsWith("open")) {
+        activateRelay();
       }
 
       inData = ""; // Clear recieved buffer
